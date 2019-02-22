@@ -14,11 +14,6 @@ class HasuraError extends Error {
 
 }
 
-const stringify = fn => (query, variables) => fn(JSON.stringify({
-  query,
-  variables
-}));
-
 const buildClient = openWebSocket => ({
   address,
   adminSecret,
@@ -120,7 +115,7 @@ const buildClient = openWebSocket => ({
 
   const runFromString = payload => exec(getId(), payload);
 
-  const subscribeFromString = (payload, sub) => {
+  const subscribeFromString = (sub, payload) => {
     const id = getId();
     subscribers.set(id, sub);
     return {
@@ -137,8 +132,14 @@ const buildClient = openWebSocket => ({
     connection,
     runFromString,
     subscribeFromString,
-    run: stringify(runFromString),
-    subscribe: stringify(subscribeFromString)
+    run: (query, variables) => runFromString(JSON.stringify({
+      query,
+      variables
+    })),
+    subscribe: (sub, query, variables) => subscribeFromString(sub, JSON.stringify({
+      query,
+      variables
+    }))
   };
 };
 
