@@ -22,6 +22,9 @@
   "bugs": {
     "url": "https://github.com/kigiri/hasura-ws/issues"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "homepage": "https://github.com/kigiri/hasura-ws#readme",
   "dependencies": {
     "@hasura-ws/core": "^0.0.1",
@@ -33,5 +36,6 @@
     "rollup-plugin-babel": "^4.3.2",
     "rollup-plugin-commonjs": "^9.2.0",
     "rollup-plugin-node-resolve": "^4.0.1"
-  }
+  },
+  "gitHead": "3b2ebddc56e2bd260b841dd38a925b7ffd7146fb"
 }

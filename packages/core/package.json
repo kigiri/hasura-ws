@@ -17,6 +17,9 @@
     "graphql",
     "websocket"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "author": "kigiri",
   "license": "MIT",
   "bugs": {
@@ -28,5 +31,6 @@
     "rollup": "^1.2.2",
     "rollup-plugin-babel": "^4.3.2",
     "rollup-plugin-commonjs": "^9.2.0"
-  }
+  },
+  "gitHead": "3b2ebddc56e2bd260b841dd38a925b7ffd7146fb"
 }
