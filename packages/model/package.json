@@ -1,0 +1,37 @@
+{
+  "name": "@hasura-ws/model",
+  "version": "0.0.5",
+  "description": "Model builder for hasura-ws",
+  "main": "dist/index.js",
+  "module": "index.js",
+  "scripts": {
+    "build": "rollup -c rollup.config.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kigiri/hasura-ws.git"
+  },
+  "keywords": [
+    "hasura",
+    "graphql",
+    "websocket"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "author": "kigiri",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/kigiri/hasura-ws/issues"
+  },
+  "homepage": "https://github.com/kigiri/hasura-ws#readme",
+  "dependencies": {
+    "@hasura-ws/hooks": "^0.0.5"
+  },
+  "devDependencies": {
+    "rollup": "^1.2.2",
+    "rollup-plugin-commonjs": "^9.2.0"
+  },
+  "gitHead": "3b2ebddc56e2bd260b841dd38a925b7ffd7146fb"
+}
