@@ -1,6 +1,9 @@
 {
   "name": "root",
   "private": true,
+  "scripts": {
+    "publish": "lerna run build && git commit -am \"add build files\" && lerna publish"
+  },
   "devDependencies": {
     "lerna": "^3.0.0-rc.0"
   }
