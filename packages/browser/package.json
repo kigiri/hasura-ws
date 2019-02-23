@@ -1,6 +1,6 @@
 {
   "name": "@hasura-ws/browser",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "Browser driver for hasura-ws",
   "main": "dist/index.js",
   "module": "index.js",
@@ -27,7 +27,7 @@
   },
   "homepage": "https://github.com/kigiri/hasura-ws#readme",
   "dependencies": {
-    "@hasura-ws/core": "^0.0.5"
+    "@hasura-ws/core": "^0.0.6"
   },
   "devDependencies": {
     "rollup": "^1.2.2",
