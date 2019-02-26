@@ -56,7 +56,9 @@ export const prepareMutation = query => {
   return async variables => client.runFromString(build(variables, true).payload)
 }
 
+const DATA = Symbol('data')
 const dispatcher = subs => data => {
+  subs[DATA] = data
   for (const sub of subs) {
     sub(data)
   }
@@ -71,8 +73,11 @@ export const prepareSubscription = query => {
     const subs = subList[hash] || (subList[hash] = new Set())
     if (subs.size === 0) {
       subs.handler = client.subscribe(payload, dispatcher(subs))
+    } else {
+      subs.handler.execution.then(() => sub(subs[DATA]))
     }
     subs.add(sub)
+
     const unsubscribe = () => {
       subs.delete(sub)
       if (subs.size === 0 && subs.handler) {
@@ -81,6 +86,7 @@ export const prepareSubscription = query => {
         subList[hash] = undefined
       }
     }
+
     return { execution: subs.handler.execution, unsubscribe }
   }
 
