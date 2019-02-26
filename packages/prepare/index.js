@@ -19,10 +19,8 @@ const buildQuery = query => {
 
 const pending = new Map()
 const memoryCache = (hash, get) => {
-  if (pending.has(hash)) {
-    console.log('got value from memory', hash)
-    return pending.get(hash)
-  }
+  const pendingValue = pending.get(hash)
+  if (pendingValue) return pendingValue
   const request = get()
   pending.set(hash, request)
   setTimeout(() => pending.delete(hash), 5 * 60 * 1000)
@@ -37,12 +35,10 @@ export const prepareQuery = query => {
     return memoryCache(hash, async () => {
       const value = await cache.get(hash)
       if (value !== undefined) {
-        console.log('got value from idb cache', hash)
         return value
       }
       const pendingQuery = client.runFromString(payload)
       const queryResult = await pendingQuery
-      console.log('got value from hasura', hash)
       await cache.set(hash, queryResult)
       return queryResult
     })
@@ -51,29 +47,13 @@ export const prepareQuery = query => {
   run.noCache = async variables =>
     client.runFromString(build(variables, true).payload)
 
-  const use = variables => {
-    const [state, setState] = useState({ pending: true })
-    useEffect(async () => {
-      try {
-        const value = await client.runFromString(variables)
-        setState({ pending: false, error: undefined, value })
-      } catch (error) {
-        setState({ pending: false, error, value: undefined })
-      }
-    }, [variables])
-    return state
-  }
-
-  return { use, run }
+  return run
 }
 
 export const prepareMutation = query => {
   const build = buildQuery(query)
 
-  return {
-    run: async variables =>
-      client.runFromString(build(variables, true).payload),
-  }
+  return async variables => client.runFromString(build(variables, true).payload)
 }
 
 const dispatcher = subs => data => {
@@ -104,7 +84,7 @@ export const prepareSubscription = query => {
     return { execution: subs.handler.execution, unsubscribe }
   }
 
-  return { subscribe }
+  return subscribe
 }
 
 export const prepare = (client, query) => {
