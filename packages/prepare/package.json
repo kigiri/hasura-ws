@@ -32,5 +32,6 @@
   "devDependencies": {
     "rollup": "^1.2.2",
     "rollup-plugin-commonjs": "^9.2.0"
-  }
+  },
+  "gitHead": "d015a1d51bf129d38d3157f021e0a2d320cc420d"
 }

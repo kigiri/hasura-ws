@@ -89,10 +89,8 @@ const buildQuery = query => {
 
 const pending = new Map();
 const memoryCache = (hash, get) => {
-  if (pending.has(hash)) {
-    console.log('got value from memory', hash);
-    return pending.get(hash)
-  }
+  const pendingValue = pending.get(hash);
+  if (pendingValue) return pendingValue
   const request = get();
   pending.set(hash, request);
   setTimeout(() => pending.delete(hash), 5 * 60 * 1000);
@@ -107,12 +105,10 @@ const prepareQuery = query => {
     return memoryCache(hash, async () => {
       const value = await get(hash);
       if (value !== undefined) {
-        console.log('got value from idb cache', hash);
         return value
       }
       const pendingQuery = client.runFromString(payload);
       const queryResult = await pendingQuery;
-      console.log('got value from hasura', hash);
       await set(hash, queryResult);
       return queryResult
     })
@@ -121,32 +117,18 @@ const prepareQuery = query => {
   run.noCache = async variables =>
     client.runFromString(build(variables, true).payload);
 
-  const use = variables => {
-    const [state, setState] = useState({ pending: true });
-    useEffect(async () => {
-      try {
-        const value = await client.runFromString(variables);
-        setState({ pending: false, error: undefined, value });
-      } catch (error) {
-        setState({ pending: false, error, value: undefined });
-      }
-    }, [variables]);
-    return state
-  };
-
-  return { use, run }
+  return run
 };
 
 const prepareMutation = query => {
   const build = buildQuery(query);
 
-  return {
-    run: async variables =>
-      client.runFromString(build(variables, true).payload),
-  }
+  return async variables => client.runFromString(build(variables, true).payload)
 };
 
+const DATA = Symbol('data');
 const dispatcher = subs => data => {
+  subs[DATA] = data;
   for (const sub of subs) {
     sub(data);
   }
@@ -161,8 +143,11 @@ const prepareSubscription = query => {
     const subs = subList[hash] || (subList[hash] = new Set());
     if (subs.size === 0) {
       subs.handler = client.subscribe(payload, dispatcher(subs));
+    } else {
+      subs.handler.execution.then(() => sub(subs[DATA]));
     }
     subs.add(sub);
+
     const unsubscribe = () => {
       subs.delete(sub);
       if (subs.size === 0 && subs.handler) {
@@ -171,10 +156,11 @@ const prepareSubscription = query => {
         subList[hash] = undefined;
       }
     };
+
     return { execution: subs.handler.execution, unsubscribe }
   };
 
-  return { subscribe }
+  return subscribe
 };
 
 const prepare = (client, query) => {

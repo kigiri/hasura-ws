@@ -32,5 +32,5 @@
     "rollup-plugin-babel": "^4.3.2",
     "rollup-plugin-commonjs": "^9.2.0"
   },
-  "gitHead": "3b2ebddc56e2bd260b841dd38a925b7ffd7146fb"
+  "gitHead": "d015a1d51bf129d38d3157f021e0a2d320cc420d"
 }
