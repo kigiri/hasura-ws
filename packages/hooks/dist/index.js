@@ -7,7 +7,7 @@ var react = require('react');
 const buildHook = builder => {
   const useBuilder = builder(_ => _);
   useBuilder.map = builder;
-  useBuilder.first = builder(_ => {
+  useBuilder.one = builder(_ => {
     const ret = {};
     for (const key of Object.keys(_)) {
       ret[key] = _[key][0];
@@ -20,7 +20,7 @@ const buildHook = builder => {
 const useQuery = buildHook(map => (run, variables, inputs) => {
   const [state, setState] = react.useState({ pending: true });
   react.useEffect(async () => {
-    setState({ pending: true });
+    state.pending || setState({ pending: true });
     try {
       setState(map(await run.all(variables)));
     } catch (error) {
@@ -49,6 +49,7 @@ const useMutation = (mutate, variables, inputs) => {
 const useSubscribe = buildHook(map => (subscribe, variables, inputs) => {
   const [state, setState] = react.useState({ pending: true });
   react.useEffect(() => {
+    state.pending || setState({ pending: true });
     const handle = subscribe.all(variables, value => map(setState));
     handle.execution.catch(error => setState({ error }));
 
