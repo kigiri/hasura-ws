@@ -100,7 +100,7 @@ const memoryCache = (hash, get) => {
 const prepareQuery = query => {
   const build = buildQuery(query);
 
-  const run = variables => {
+  const runAll = variables => {
     const { payload, hash } = build(variables);
     return memoryCache(hash, async () => {
       const value = await get(hash);
@@ -114,8 +114,14 @@ const prepareQuery = query => {
     })
   };
 
-  run.noCache = async variables =>
+  const run = async variables => Object.values(await runAll(variables))[0];
+  run.all = runAll;
+  runAll.noCache = async variables =>
     client.runFromString(build(variables, true).payload);
+  run.noCache = async variables =>
+    Object.values(await client.runFromString(build(variables, true).payload))[0];
+  run.one = async variables => (await run(variables))[0];
+  run.one.noCache = async variables => (await run.noCache(variables))[0];
 
   return run
 };
@@ -123,7 +129,12 @@ const prepareQuery = query => {
 const prepareMutation = query => {
   const build = buildQuery(query);
 
-  return async variables => client.runFromString(build(variables, true).payload)
+  const runAll = async variables =>
+    client.runFromString(build(variables, true).payload);
+
+  const run = async variables => Object.values(await runAll(variables))[0];
+  run.all = runAll;
+  return run
 };
 
 const DATA = Symbol('data');
@@ -138,7 +149,7 @@ const prepareSubscription = query => {
   const build = buildQuery(query);
   const subList = {};
 
-  const subscribe = (sub, variables) => {
+  const subscribeMap = mapper => (sub, variables) => {
     const { payload, hash } = build(variables);
     const subs = subList[hash] || (subList[hash] = new Set());
     if (subs.size === 0) {
@@ -159,7 +170,9 @@ const prepareSubscription = query => {
 
     return { execution: subs.handler.execution, unsubscribe }
   };
-
+  const subscribe = subscribeMap(_ => Object.values(_)[0]);
+  subscribe.all = subscribeMap(_ => _);
+  subscribe.one = subscribeMap(_ => Object.values(_)[0][0]);
   return subscribe
 };
 
