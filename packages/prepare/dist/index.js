@@ -97,7 +97,7 @@ const memoryCache = (hash, get) => {
   return request
 };
 
-const prepareQuery = query => {
+const prepareQuery = (client, query) => {
   const build = buildQuery(query);
 
   const runAll = variables => {
@@ -126,7 +126,7 @@ const prepareQuery = query => {
   return run
 };
 
-const prepareMutation = query => {
+const prepareMutation = (client, query) => {
   const build = buildQuery(query);
 
   const runAll = async variables =>
@@ -145,7 +145,7 @@ const dispatcher = subs => data => {
   }
 };
 
-const prepareSubscription = query => {
+const prepareSubscription = (client, query) => {
   const build = buildQuery(query);
   const subList = {};
 
