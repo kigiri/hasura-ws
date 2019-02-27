@@ -105,7 +105,7 @@ const client = initClient({
   token: 'eyJhbGciOiJIUzI...w5c', // or a valid JWT token
 })
 
-const prepare = initPrepare(client) // pass ou client to prepare
+const prepare = initPrepare(client) // pass the client to prepare
 ```
 
 ### `prepare`
