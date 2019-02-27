@@ -2,12 +2,12 @@
 
 Minimal javascript graphql websocket client for `hasura`
 
-## `@hasura-ws/node` or `@hasura-ws/browser`
+## `@hasura-ws/browser` or `@hasura-ws/node` (for `nodejs` only!)
 
 ### Initialize the client
 
 ```js
-import { initClient } from '@hasura-ws/browser' // or '@hasura-ws/node' in node
+import { initClient } from '@hasura-ws/browser'
 
 // the client can take 2 parameters
 // the required websocket address
