@@ -223,9 +223,7 @@ const MyQueryComponent = ({ id }) => {
 
 // Or using `.one` to get one user directly:
 const MyQueryComponent = ({ id }) => {
-  const { pending, error, user } = useQuery.one(getUserEmail.noCache, { id }, [
-    id,
-  ])
+  const { pending, error, user } = useQuery.one(getUserEmail, { id }, [id])
   if (pending) return 'Loading...'
   if (error) return 'Oops !'
   return <div>{user.email}</div>
@@ -235,8 +233,15 @@ const MyQueryComponent = ({ id }) => {
 ### `useSubscribe`
 
 ```js
+const userSubscribe = prepare(`
+subscription subscribeToUserById($id: Int!) {
+  user (where: {id: {_eq: $id}}) {
+    email
+  }
+}`)
+
 const MySubscribeComponent = ({ id }) => {
-  const userQuery = userSubscribe.use({ id }, [id])
+  const userQuery = useSubscribe(userSubscribe, { id }, [id])
   if (userQuery.pending) return 'Loading...'
   if (userQuery.error) return 'Oops !'
   const { email } = userQuery.user[0]
@@ -331,7 +336,9 @@ await userModel.update({
 takes an id and a subscription callback
 
 ```js
-await userModel.subscribe(1, user => console.log(user))
+const { execution, unsubscribe } = userModel.subscribe(1, user =>
+  console.log(user),
+)
 ```
 
 ### `model.remove`
