@@ -118,8 +118,8 @@ const getUserEmail = prepare(`query {
   }
 }`)
 
-const data = await getUserEmail()
-console.log(data.user[0].email)
+const users = await getUserEmail()
+console.log(users[0].email)
 
 // query with variables
 const getUserEmail = prepare(`query getUserById($id: Int!) {
@@ -128,8 +128,22 @@ const getUserEmail = prepare(`query getUserById($id: Int!) {
   }
 }`)
 
-const data = await getUserEmail({ id: 1 })
+// by default the function return only the first ressource:
+const users = await getUserEmail({ id: 1 })
+console.log(users[0].email)
+
+// you can get the untouched client result with `.all`:
+const data = await getUserEmail.all({ id: 1 })
 console.log(data.user[0].email)
+
+// If your query is limited to 1 result, you can access it with `.one`:
+const user = await getUserEmail.one({ id: 1 })
+console.log(user.email)
+
+// in all of those case, you can bypass the cache with `.noCache`
+getUserEmail.noCache({ id: 1 })
+getUserEmail.all.noCache({ id: 1 })
+getUserEmail.one.noCache({ id: 1 })
 
 // mutation with variables
 const updateUser = prepare(`
@@ -139,7 +153,11 @@ mutation update_user($id: Int, $changes: user_set_input) {
   }
 }`)
 
-await updateUser({ id: 1, changes: { email: 'jean@email.com' } })
+// by default it only returns the results of the first mutation,
+// but like in queries you have `.all` if you do multiple mutations at once.
+const result = await updateUser({ id: 1, changes: { email: 'jean@email.com' } })
+
+console.log(result.affected_rows)
 
 // subscription with variables
 const userSubscribe = prepare(`
@@ -149,8 +167,19 @@ subscription subscribeToUserById($id: Int!) {
   }
 }`)
 
-userSubscribe(data => console.log(data.user[0].email), { id: 1 })
 // a subscribe return the returned values of client.subscribe
+const { execution, unsubscribe } = userSubscribe(
+  user => console.log(user[0].email), // callback
+  { id: 1 }, // variables
+)
+
+// like queries you can use `.one`, here, you get the first user directly
+userSubscribe.one(({ email }) => console.log(email), { id: 1 })
+
+// and you get `.all` for having the raw result from the client
+userSubscribe.all(data => console.log(data.user[0].email), { id: 1 })
+
+// subscriptions are live so never cached, no `.noCache` here
 ```
 
 ## `@hasura-ws/hooks`
@@ -188,8 +217,18 @@ const MyQueryComponent = ({ id }) => {
   const emailQuery = useQuery(getUserEmail, { id }, [id])
   if (emailQuery.pending) return 'Loading...'
   if (emailQuery.error) return 'Oops !'
-  const { email } = emailQuery.value.user[0]
+  const { email } = emailQuery.user[0]
   return <div>{email}</div>
+}
+
+// Or using `.one` to get one user directly:
+const MyQueryComponent = ({ id }) => {
+  const { pending, error, user } = useQuery.one(getUserEmail.noCache, { id }, [
+    id,
+  ])
+  if (pending) return 'Loading...'
+  if (error) return 'Oops !'
+  return <div>{user.email}</div>
 }
 ```
 
@@ -197,13 +236,15 @@ const MyQueryComponent = ({ id }) => {
 
 ```js
 const MySubscribeComponent = ({ id }) => {
-  const userQuery = useSubscribe(userSubscribe, { id }, [id])
+  const userQuery = userSubscribe.use({ id }, [id])
   if (userQuery.pending) return 'Loading...'
   if (userQuery.error) return 'Oops !'
-  const { email } = userQuery.value.user[0]
+  const { email } = userQuery.user[0]
   return <div>{email}</div>
 }
 ```
+
+> `useSubscribe` also has a `.one` method and it works exactly like `useQuery`
 
 ### `useMutation`
 
@@ -245,7 +286,8 @@ const client = initClient({
 const prepare = initPrepare(client)
 const initModel = buildModel(prepare)
 
-const userModel = initModel('email firstname lastname')
+// initModel takes 2 arguments: the table name and the field names
+const userModel = initModel('user', 'email firstname lastname')
 ```
 
 ### `model.add`
@@ -305,15 +347,13 @@ await userModel.remove(1)
 The model also expose react hooks for each actions:
 
 - `useGet(id)`
+- `useGet.one(id)`
 - `useAdd({ a: 1, b: 2 }, [1, 2])`
 - `useRemove(id)`
 - `useUpdate({ id, a: 1, b: 2 }, [1, 2])`
 - `useSubscribe(id)`
+- `useSubscribe.one(id)`
 
 It's just the correct hook and the model method.
 
 As such `useAdd` is a kind of `useMutation` for `user.add`.
-
-
-
-

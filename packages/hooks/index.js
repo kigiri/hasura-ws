@@ -1,42 +1,54 @@
 import { useState, useEffect, useMemo } from 'react'
 
-export const useQuery = (run, variables, inputs) => {
+const buildHook = builder => {
+  const useBuilder = builder(_ => _)
+  useBuilder.map = builder
+  useBuilder.first = builder(_ => {
+    const ret = {}
+    for (const key of Object.keys(_)) {
+      ret[key] = _[key][0]
+    }
+    return ret
+  })
+  return useBuilder
+}
+
+export const useQuery = buildHook(map => (run, variables, inputs) => {
   const [state, setState] = useState({ pending: true })
   useEffect(async () => {
     setState({ pending: true })
     try {
-      const value = await run(variables)
-      setState({ value })
+      setState(map(await run.all(variables)))
     } catch (error) {
       setState({ error })
     }
   }, inputs || [variables])
   return state
-}
+})
 
 export const useMutation = (mutate, variables, inputs) => {
   const [pending, setPending] = useState(false)
   const run = useMemo(
     () => async extraVariables => {
       setPending(true)
-      await mutate(
+      const ret = await mutate(
         (variables || extraVariables) && { ...variables, ...extraVariables },
       )
       setPending(false)
+      return ret
     },
     inputs || [variables],
   )
   return { pending, run }
 }
 
-export const useSubscribe = (subscribe, variables, inputs) => {
+export const useSubscribe = buildHook(map => (subscribe, variables, inputs) => {
   const [state, setState] = useState({ pending: true })
   useEffect(() => {
-    const setValue = value => setState({ value })
-    const handle = subscribe(variables, setValue)
+    const handle = subscribe.all(variables, value => map(setState))
     handle.execution.catch(error => setState({ error }))
 
     return handle.unsubscribe
   }, inputs || [variables])
   return state
-}
+})

@@ -1,10 +1,5 @@
 import { useQuery, useMutation, useSubscribe } from '@hasura-ws/hooks'
 
-const withHook = (useHook, query, name) => id => {
-  const ret = useHook(query, { id }, [id])
-  return ret.value ? { [name]: ret.value[name][0] } : ret
-}
-
 export const buildModel = prepare => (name, types) => {
   const all = `{id ${types}}`
   const oneById = `($id: Int!) {
@@ -29,6 +24,9 @@ export const buildModel = prepare => (name, types) => {
     delete_${name} (where: {id: {_eq: $id}}) { affected_rows }
   }`)
 
+  const useGet = id => useQuery.one(selectQuery, { id }, [id])
+  useGet.noCache = id => useQuery.one(selectQuery.noCache, { id }, [id])
+
   return {
     insertQuery,
     deleteQuery,
@@ -36,13 +34,13 @@ export const buildModel = prepare => (name, types) => {
     selectQuery,
     get: async id => (await selectQuery({ id }))[name][0],
     add: async o =>
-      (await insertQuery({ objects: [o] }))[`insert_${name}`].returning[0].id,
+      (await insertQuery.all({ objects: [o] }))[`insert_${name}`].returning[0]
+        .id,
     update: ({ id, ...changes }) => updateQuery({ id, changes }),
-    subscribe: (id, sub) =>
-      subscribeQuery(result => sub(result[name][0]), { id }),
+    subscribe: (id, sub) => subscribeQuery.one(sub, { id }),
     remove: id => deleteQuery({ id }),
-    useGet: withHook(useQuery, selectQuery, name),
-    useSubscribe: withHook(useSubscribe, subscribeQuery, name),
+    useGet,
+    useSubscribe: id => useSubscribe.one(subscribeQuery, { id }, [id]),
     useRemove: id => useMutation(deleteQuery, { id }, [id]),
     useAdd: (o, inputs) => useMutation(insertQuery, { objects: [o] }, inputs),
     useUpdate: ({ id, ...changes }, inputs) =>
