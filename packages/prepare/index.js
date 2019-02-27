@@ -27,7 +27,7 @@ const memoryCache = (hash, get) => {
   return request
 }
 
-export const prepareQuery = query => {
+export const prepareQuery = (client, query) => {
   const build = buildQuery(query)
 
   const runAll = variables => {
@@ -56,7 +56,7 @@ export const prepareQuery = query => {
   return run
 }
 
-export const prepareMutation = query => {
+export const prepareMutation = (client, query) => {
   const build = buildQuery(query)
 
   const runAll = async variables =>
@@ -75,7 +75,7 @@ const dispatcher = subs => data => {
   }
 }
 
-export const prepareSubscription = query => {
+export const prepareSubscription = (client, query) => {
   const build = buildQuery(query)
   const subList = {}
 
