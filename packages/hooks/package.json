@@ -1,6 +1,6 @@
 {
   "name": "@hasura-ws/hooks",
-  "version": "0.0.11",
+  "version": "0.1.0",
   "description": "React hooks for hasura-ws",
   "main": "dist/index.js",
   "module": "index.js",
