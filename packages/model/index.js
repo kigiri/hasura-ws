@@ -24,6 +24,8 @@ export const buildModel = prepare => name => types => {
     delete_${name} (where: {id: {_eq: $id}}) { affected_rows }
   }`)
 
+  const get = async id => (await selectQuery({ id }))[name][0]
+  get.noCache = async id => (await selectQuery.noCache({ id }))[name][0]
   const useGet = id => useQuery.one(selectQuery, { id }, [id])
   useGet.noCache = id => useQuery.one(selectQuery.noCache, { id }, [id])
 
@@ -32,7 +34,7 @@ export const buildModel = prepare => name => types => {
     deleteQuery,
     updateQuery,
     selectQuery,
-    get: async id => (await selectQuery({ id }))[name][0],
+    get,
     add: async o =>
       (await insertQuery.all({ objects: [o] }))[`insert_${name}`].returning[0]
         .id,
