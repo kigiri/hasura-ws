@@ -16,6 +16,7 @@ const client = initClient({
   address: 'ws://localhost:8080/v1alpha1/graphql', // (either ws:// or wss://)
   adminSecret: '9311f0d7b5caaa183', // your hasura secret
   token: 'eyJhbGciOiJIUzI...w5c', // or a valid JWT token
+  debug: false, // log additional information for sent and recieved messages
 })
 ```
 
@@ -292,7 +293,11 @@ const prepare = initPrepare(client)
 const initModel = buildModel(prepare)
 
 // initModel takes 2 arguments: the table name and the field names
-const userModel = initModel('user', 'email firstname lastname')
+const userModel = initModel('user')(`
+  email
+  firstname
+  lastname
+`)
 ```
 
 ### `model.add`

@@ -6,7 +6,7 @@ class HasuraError extends Error {
   }
 }
 
-const buildClient = openWebSocket => ({ address, adminSecret, token }) => {
+const buildClient = openWebSocket => ({ address, adminSecret, token, debug }) => {
   const ws = openWebSocket(address)
   const handlers = new Map()
   const subscribers = new Map()
@@ -63,6 +63,8 @@ const buildClient = openWebSocket => ({ address, adminSecret, token }) => {
       const { type, payload, id } = JSON.parse(data)
       const handler = handlers.get(id)
 
+      debug && console.debug(`hasura-ws: <${type}#${id}>`, payload)
+
       switch (type) {
         case 'connection_ack':
           return resolve(payload)
@@ -95,6 +97,7 @@ const buildClient = openWebSocket => ({ address, adminSecret, token }) => {
     new Promise(async (resolve, reject) => {
       handlers.set(id, { resolve, reject })
       await connection
+      debug && console.debug(`hasura-ws: <start#${id}>`, JSON.parse(payload))
       ws.send(`{"type":"start","id":"${id}","payload":${payload}}`)
     })
 
