@@ -17,7 +17,8 @@ class HasuraError extends Error {
 const buildClient = openWebSocket => ({
   address,
   adminSecret,
-  token
+  token,
+  debug
 }) => {
   const ws = openWebSocket(address);
   const handlers = new Map();
@@ -69,6 +70,7 @@ const buildClient = openWebSocket => ({
         id
       } = JSON.parse(data);
       const handler = handlers.get(id);
+      debug && console.debug(`hasura-ws: <${type}#${id}>`, payload);
 
       switch (type) {
         case 'connection_ack':
@@ -110,6 +112,7 @@ const buildClient = openWebSocket => ({
       reject
     });
     await connection;
+    debug && console.debug(`hasura-ws: <start#${id}>`, JSON.parse(payload));
     ws.send(`{"type":"start","id":"${id}","payload":${payload}}`);
   });
 

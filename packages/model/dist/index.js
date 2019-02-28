@@ -4,7 +4,7 @@ Object.defineProperty(exports, '__esModule', { value: true });
 
 var hooks = require('@hasura-ws/hooks');
 
-const buildModel = prepare => (name, types) => {
+const buildModel = prepare => name => types => {
   const all = `{id ${types}}`;
   const oneById = `($id: Int!) {
     ${name} (where: {id: {_eq: $id}} limit: 1) ${all}
@@ -19,15 +19,17 @@ const buildModel = prepare => (name, types) => {
   }`);
 
   const updateQuery = prepare(`
-  mutation update_${name}($id: Int, $changes: ${name}_set_input) {
+  mutation update_${name}($id: Int!, $changes: ${name}_set_input!) {
     update_${name}(where: {id: {_eq: $id}}, _set: $changes) { affected_rows }
   }`);
 
   const deleteQuery = prepare(`
-  mutation delete_${name} {
+  mutation delete_${name} ($id: Int!) {
     delete_${name} (where: {id: {_eq: $id}}) { affected_rows }
   }`);
 
+  const get = async id => (await selectQuery.all({ id }))[name][0];
+  get.noCache = async id => (await selectQuery.all.noCache({ id }))[name][0];
   const useGet = id => hooks.useQuery.one(selectQuery, { id }, [id]);
   useGet.noCache = id => hooks.useQuery.one(selectQuery.noCache, { id }, [id]);
 
@@ -36,7 +38,7 @@ const buildModel = prepare => (name, types) => {
     deleteQuery,
     updateQuery,
     selectQuery,
-    get: async id => (await selectQuery({ id }))[name][0],
+    get,
     add: async o =>
       (await insertQuery.all({ objects: [o] }))[`insert_${name}`].returning[0]
         .id,
