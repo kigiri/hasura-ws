@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useSubscribe } from '@hasura-ws/hooks'
 
-export const buildModel = prepare => (name, types) => {
+export const buildModel = prepare => name => types => {
   const all = `{id ${types}}`
   const oneById = `($id: Int!) {
     ${name} (where: {id: {_eq: $id}} limit: 1) ${all}
