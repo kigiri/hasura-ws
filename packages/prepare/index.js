@@ -8,6 +8,11 @@ const buildQuery = query => {
   const noVars = { payload, hash }
   return (variables, noCache) => {
     if (!variables) return noVars
+    if (typeof variables === 'function') {
+      throw Error(
+        'variables should not be functions, verify the order of your parameters',
+      )
+    }
     const jsonVariables = JSON.stringify(variables)
 
     return {
@@ -68,8 +73,8 @@ export const prepareMutation = (client, query) => {
 }
 
 const DATA = Symbol('data')
-const dispatcher = subs => data => {
-  subs[DATA] = data
+const dispatcher = (subs, mapper) => eventData => {
+  const data = (subs[DATA] = mapper(eventData))
   for (const sub of subs) {
     sub(data)
   }
@@ -83,7 +88,10 @@ export const prepareSubscription = (client, query) => {
     const { payload, hash } = build(variables)
     const subs = subList[hash] || (subList[hash] = new Set())
     if (subs.size === 0) {
-      subs.handler = client.subscribe(payload, dispatcher(subs))
+      subs.handler = client.subscribeFromString(
+        dispatcher(subs, mapper),
+        payload,
+      )
     } else {
       subs.handler.execution.then(() => sub(subs[DATA]))
     }
