@@ -15,12 +15,12 @@ export const buildModel = prepare => name => types => {
   }`)
 
   const updateQuery = prepare(`
-  mutation update_${name}($id: Int, $changes: ${name}_set_input) {
+  mutation update_${name}($id: Int!, $changes: ${name}_set_input!) {
     update_${name}(where: {id: {_eq: $id}}, _set: $changes) { affected_rows }
   }`)
 
   const deleteQuery = prepare(`
-  mutation delete_${name} {
+  mutation delete_${name} ($id: Int!) {
     delete_${name} (where: {id: {_eq: $id}}) { affected_rows }
   }`)
 
