@@ -305,12 +305,30 @@ const userModel = initModel('user')(`
 takes an object of the values to be inserted
 
 ```js
+// adding a single element
 const id = await userModel.add({
   email: 'jean@email.com'
   firstname: 'Jean',
   lastname: 'Valjean',
 })
 id // 1
+
+
+// or an array of elements
+const ids = await userModel.add([
+  {
+    email: 'jean@email.com'
+    firstname: 'Jean',
+    lastname: 'Valjean',
+  },
+  {
+    email: 'geger@hotmail.com'
+    firstname: 'Geraldine',
+    lastname: 'Mercado',
+  }
+])
+
+ids // [ 1, 2 ]
 ```
 
 ### `model.get`
