@@ -4,6 +4,7 @@ Object.defineProperty(exports, '__esModule', { value: true });
 
 var hooks = require('@hasura-ws/hooks');
 
+const getId = _ => _.id;
 const buildModel = prepare => name => types => {
   const all = `{id ${types}}`;
   const oneById = `($id: Int!) {
@@ -39,9 +40,14 @@ const buildModel = prepare => name => types => {
     updateQuery,
     selectQuery,
     get,
-    add: async o =>
-      (await insertQuery.all({ objects: [o] }))[`insert_${name}`].returning[0]
-        .id,
+    add: async o => {
+      const isArray = Array.isArray(o);
+      const result = await insertQuery.all({ objects: isArray ? o : [o] });
+
+      return isArray
+        ? result[`insert_${name}`].returning.map(getId)
+        : result[`insert_${name}`].returning[0].id
+    },
     update: ({ id, ...changes }) => updateQuery({ id, changes }),
     subscribe: (id, sub) => subscribeQuery.one(sub, { id }),
     remove: id => deleteQuery({ id }),
