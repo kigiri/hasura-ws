@@ -15,21 +15,19 @@ class HasuraError extends Error {
 }
 
 const buildClient = openWebSocket => ({
-  address,
-  adminSecret,
-  token,
-  debug
+  debug,
+  ...params
 }) => {
-  const ws = openWebSocket(address);
+  const ws = openWebSocket(params.address);
   const handlers = new Map();
   const subscribers = new Map();
   ws.on('open', () => ws.send(JSON.stringify({
     type: 'connection_init',
     payload: {
-      headers: adminSecret ? {
-        'x-hasura-admin-secret': adminSecret
+      headers: params.adminSecret ? {
+        'x-hasura-admin-secret': params.adminSecret
       } : {
-        Authorization: `Bearer ${token}`
+        Authorization: `Bearer ${params.token}`
       }
     }
   })));
@@ -52,7 +50,7 @@ const buildClient = openWebSocket => ({
     return err;
   };
 
-  const connection = new Promise((resolve, reject) => {
+  let connection = new Promise((resolve, reject) => {
     ws.on('error', event => reject(rejectAllPending(new HasuraError({
       error: 'WebSocket connection failed',
       event
@@ -77,7 +75,9 @@ const buildClient = openWebSocket => ({
           return resolve(payload);
 
         case 'connection_error':
-          return reject(new HasuraError(payload));
+          const err = rejectAllPending(new HasuraError(payload));
+          connection = Promise.reject(err);
+          return reject(err);
 
         case 'data':
           const sub = subscribers.get(id);
@@ -90,18 +90,26 @@ const buildClient = openWebSocket => ({
               handlers.delete(id);
             }
 
-            break;
+            return;
           }
 
+          return handler ? handler.payload = payload : debug && console.debug('missing handler for message', id);
+
         case 'error':
-          handler && (handler[type] = payload);
-          break;
+          if (!handler) {
+            return debug && console.debug('missing handler for message', id);
+          }
+
+          return handler.payload = payload.errors ? {
+            error: payload.errors[0],
+            ...payload
+          } : payload;
 
         case 'complete':
           if (!handler) return; // should never happen
 
           handlers.delete(id);
-          return handler.error ? handler.reject(new HasuraError(handler.error)) : handler.resolve(handler.data && handler.data.data);
+          return handler.error ? handler.reject(new HasuraError(handler.payload)) : handler.resolve(handler.payload && handler.payload.data);
       }
     });
   });
