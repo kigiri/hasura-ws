@@ -2,7 +2,7 @@ class HasuraError extends Error {
   constructor({ error, ...props }) {
     super(error)
     Object.assign(this, props)
-    Error.captureStackTrace(this, HasuraError)
+    Error.captureStackTrace && Error.captureStackTrace(this, HasuraError)
   }
 }
 
