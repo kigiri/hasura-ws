@@ -46,7 +46,7 @@ export const useSubscribe = buildHook(map => (subscribe, variables, inputs) => {
   const [state, setState] = useState({ pending: true })
   useEffect(() => {
     state.pending || setState({ pending: true })
-    const handle = subscribe.all(variables, value => map(setState))
+    const handle = subscribe.all(value => setState(map(value)), variables)
     handle.execution.catch(error => setState({ error }))
 
     return handle.unsubscribe
