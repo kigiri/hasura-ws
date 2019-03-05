@@ -1,3 +1,4 @@
+import { useCallback } from 'react'
 import { useQuery, useMutation, useSubscribe } from '@hasura-ws/hooks'
 
 const getId = _ => _.id
@@ -51,7 +52,16 @@ export const buildModel = prepare => name => types => {
     useSubscribe: id => useSubscribe.one(subscribeQuery, { id }, [id]),
     useRemove: id => useMutation(deleteQuery, { id }, [id]),
     useAdd: (o, inputs) => useMutation(insertQuery, { objects: [o] }, inputs),
-    useUpdate: ({ id, ...changes }, inputs) =>
-      useMutation(updateQuery, { id, changes }, inputs),
+    useUpdate: id => {
+      const { pending, error, run } = useMutation(updateQuery, undefined, [])
+
+      return {
+        pending,
+        error,
+        run: useCallback(({ id: overrideId, ...changes }) => {
+          return run({ id: overrideId || id, changes })
+        }, [id])
+      }
+    },
   }
 }

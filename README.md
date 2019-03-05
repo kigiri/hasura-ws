@@ -387,3 +387,20 @@ The model also expose react hooks for each actions:
 It's just the correct hook and the model method.
 
 As such `useAdd` is a kind of `useMutation` for `user.add`.
+
+
+### `model.useUpdate`
+
+```jsx
+const MyComponent = ({ userId }) => {
+  const updateUser = userModel.useUpdate(userId)
+
+  return (
+    <button
+      disabled={updateUser.pending}
+      onClick={() => updateUser.run({ email: 'jean@mail.com' })}
+    />
+  )
+}
+```
+

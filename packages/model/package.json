@@ -26,6 +26,9 @@
     "url": "https://github.com/kigiri/hasura-ws/issues"
   },
   "homepage": "https://github.com/kigiri/hasura-ws#readme",
+  "peerDependencies": {
+    "react": ">=16.8.2"
+  },
   "dependencies": {
     "@hasura-ws/hooks": "^0.1.4"
   },
