@@ -1,6 +1,6 @@
 {
   "name": "@hasura-ws/model",
-  "version": "0.1.6",
+  "version": "0.1.8",
   "description": "Model builder for hasura-ws",
   "main": "dist/index.js",
   "module": "index.js",
@@ -30,7 +30,7 @@
     "react": ">=16.8.2"
   },
   "dependencies": {
-    "@hasura-ws/hooks": "^0.1.6"
+    "@hasura-ws/hooks": "^0.1.8"
   },
   "devDependencies": {
     "rollup": "^1.2.2",
