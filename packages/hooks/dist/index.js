@@ -17,21 +17,39 @@ const buildHook = builder => {
   return useBuilder
 };
 
+const genInputs = variables => (variables ? Object.values(variables) : []);
+const assertHookParams = (run, variables, inputs) => {
+  if (typeof run !== 'function') {
+    throw Error(`Hooks first arguement must be the prepare query
+Hooked query always return all the values, so ensure you didn't pass .all`)
+  }
+
+  if (inputs && !Array.isArray(inputs)) {
+    throw Error(
+      'Hooks inputs must be an array like you would give to useEffect',
+    )
+  }
+
+  if (variables && typeof variables !== 'object') {
+    throw Error('Hooks variables must be a javascript object')
+  }
+};
+
 const useQuery = buildHook(map => (run, variables, inputs) => {
+  assertHookParams(run.all, variables, inputs);
   const [state, setState] = react.useState({ pending: true });
-  react.useEffect(async () => {
+  react.useEffect(() => {
     state.pending || setState({ pending: true });
     if (variables === null) return
-    try {
-      setState(map(await run.all(variables)));
-    } catch (error) {
-      setState({ error });
-    }
-  }, inputs || [variables]);
+    run
+      .all(variables)
+      .then(value => setState(map(value)), error => setState({ error }));
+  }, inputs || genInputs(variables));
   return state
 });
 
 const useMutation = (mutate, variables, inputs) => {
+  assertHookParams(mutate, variables, inputs);
   const [pending, setPending] = react.useState(false);
   const run = react.useMemo(
     () => async extraVariables => {
@@ -42,12 +60,13 @@ const useMutation = (mutate, variables, inputs) => {
       setPending(false);
       return ret
     },
-    inputs || [variables],
+    inputs || genInputs(variables),
   );
   return { pending, run }
 };
 
 const useSubscribe = buildHook(map => (subscribe, variables, inputs) => {
+  assertHookParams(subscribe.all, variables, inputs);
   const [state, setState] = react.useState({ pending: true });
   react.useEffect(() => {
     state.pending || setState({ pending: true });
@@ -56,7 +75,7 @@ const useSubscribe = buildHook(map => (subscribe, variables, inputs) => {
     handle.execution.catch(error => setState({ error }));
 
     return handle.unsubscribe
-  }, inputs || [variables]);
+  }, inputs || genInputs(variables));
   return state
 });
 
