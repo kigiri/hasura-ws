@@ -13,6 +13,7 @@ const buildHook = builder => {
   return useBuilder
 }
 
+const genInputs = variables => variables ? Object.values(variables) : []
 export const useQuery = buildHook(map => (run, variables, inputs) => {
   const [state, setState] = useState({ pending: true })
   useEffect(async () => {
@@ -23,7 +24,7 @@ export const useQuery = buildHook(map => (run, variables, inputs) => {
     } catch (error) {
       setState({ error })
     }
-  }, inputs || [variables])
+  }, inputs || genInputs(variables))
   return state
 })
 
@@ -38,7 +39,7 @@ export const useMutation = (mutate, variables, inputs) => {
       setPending(false)
       return ret
     },
-    inputs || [variables],
+    inputs || genInputs(variables),
   )
   return { pending, run }
 }
@@ -52,6 +53,6 @@ export const useSubscribe = buildHook(map => (subscribe, variables, inputs) => {
     handle.execution.catch(error => setState({ error }))
 
     return handle.unsubscribe
-  }, inputs || [variables])
+  }, inputs || genInputs(variables))
   return state
 })
