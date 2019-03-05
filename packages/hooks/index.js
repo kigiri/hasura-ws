@@ -34,14 +34,12 @@ Hooked query always return all the values, so ensure you didn't pass .all`)
 export const useQuery = buildHook(map => (run, variables, inputs) => {
   assertHookParams(run.all, variables, inputs)
   const [state, setState] = useState({ pending: true })
-  useEffect(async () => {
+  useEffect(() => {
     state.pending || setState({ pending: true })
     if (variables === null) return
-    try {
-      setState(map(await run.all(variables)))
-    } catch (error) {
-      setState({ error })
-    }
+    run
+      .all(variables)
+      .then(value => setState(map(value)), error => setState({ error }))
   }, inputs || genInputs(variables))
   return state
 })
