@@ -13,7 +13,7 @@ const buildHook = builder => {
   return useBuilder
 }
 
-const genInputs = variables => variables ? Object.values(variables) : []
+const genInputs = variables => (variables ? Object.values(variables) : [])
 const assertHookParams = (run, variables, inputs) => {
   if (typeof run !== 'function') {
     throw Error(`Hooks first arguement must be the prepare query
@@ -21,7 +21,9 @@ Hooked query always return all the values, so ensure you didn't pass .all`)
   }
 
   if (inputs && !Array.isArray(inputs)) {
-    throw Error('Hooks inputs must be an array like you would give to useEffect')
+    throw Error(
+      'Hooks inputs must be an array like you would give to useEffect',
+    )
   }
 
   if (variables && typeof variables !== 'object') {
