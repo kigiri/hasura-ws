@@ -2,6 +2,7 @@
 
 Object.defineProperty(exports, '__esModule', { value: true });
 
+var react = require('react');
 var hooks = require('@hasura-ws/hooks');
 
 const getId = _ => _.id;
@@ -31,8 +32,9 @@ const buildModel = prepare => name => types => {
 
   const get = async id => (await selectQuery.all({ id }))[name][0];
   get.noCache = async id => (await selectQuery.all.noCache({ id }))[name][0];
-  const useGet = id => hooks.useQuery.one(selectQuery, { id }, [id]);
-  useGet.noCache = id => hooks.useQuery.one(selectQuery.noCache, { id }, [id]);
+  const useGet = id => hooks.useQuery.one(selectQuery, id ? { id } : null, [id]);
+  useGet.noCache = id =>
+    hooks.useQuery.one(selectQuery.noCache, id ? { id } : null, [id]);
 
   return {
     insertQuery,
@@ -52,11 +54,24 @@ const buildModel = prepare => name => types => {
     subscribe: (id, sub) => subscribeQuery.one(sub, { id }),
     remove: id => deleteQuery({ id }),
     useGet,
-    useSubscribe: id => hooks.useSubscribe.one(subscribeQuery, { id }, [id]),
+    useSubscribe: id =>
+      hooks.useSubscribe.one(subscribeQuery, id ? { id } : null, [id]),
     useRemove: id => hooks.useMutation(deleteQuery, { id }, [id]),
     useAdd: (o, inputs) => hooks.useMutation(insertQuery, { objects: [o] }, inputs),
-    useUpdate: ({ id, ...changes }, inputs) =>
-      hooks.useMutation(updateQuery, { id, changes }, inputs),
+    useUpdate: id => {
+      const { pending, error, run } = hooks.useMutation(updateQuery, undefined, []);
+
+      return {
+        pending,
+        error,
+        run: react.useCallback(
+          ({ id: overrideId, ...changes }) => {
+            return run({ id: overrideId || id, changes })
+          },
+          [id],
+        ),
+      }
+    },
   }
 };
 

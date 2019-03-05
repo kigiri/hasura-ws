@@ -21,6 +21,7 @@ const useQuery = buildHook(map => (run, variables, inputs) => {
   const [state, setState] = react.useState({ pending: true });
   react.useEffect(async () => {
     state.pending || setState({ pending: true });
+    if (variables === null) return
     try {
       setState(map(await run.all(variables)));
     } catch (error) {
@@ -50,6 +51,7 @@ const useSubscribe = buildHook(map => (subscribe, variables, inputs) => {
   const [state, setState] = react.useState({ pending: true });
   react.useEffect(() => {
     state.pending || setState({ pending: true });
+    if (variables === null) return
     const handle = subscribe.all(value => setState(map(value)), variables);
     handle.execution.catch(error => setState({ error }));
 
