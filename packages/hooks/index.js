@@ -14,7 +14,23 @@ const buildHook = builder => {
 }
 
 const genInputs = variables => variables ? Object.values(variables) : []
+const assertHookParams = (run, variables, inputs) => {
+  if (typeof run !== 'function') {
+    throw Error(`Hooks first arguement must be the prepare query
+Hooked query always return all the values, so ensure you didn't pass .all`)
+  }
+
+  if (inputs && !Array.isArray(inputs)) {
+    throw Error('Hooks inputs must be an array like you would give to useEffect')
+  }
+
+  if (variables && typeof variables !== 'object') {
+    throw Error('Hooks variables must be a javascript object')
+  }
+}
+
 export const useQuery = buildHook(map => (run, variables, inputs) => {
+  assertHookParams(run.all, variables, inputs)
   const [state, setState] = useState({ pending: true })
   useEffect(async () => {
     state.pending || setState({ pending: true })
@@ -29,6 +45,7 @@ export const useQuery = buildHook(map => (run, variables, inputs) => {
 })
 
 export const useMutation = (mutate, variables, inputs) => {
+  assertHookParams(mutate, variables, inputs)
   const [pending, setPending] = useState(false)
   const run = useMemo(
     () => async extraVariables => {
@@ -45,6 +62,7 @@ export const useMutation = (mutate, variables, inputs) => {
 }
 
 export const useSubscribe = buildHook(map => (subscribe, variables, inputs) => {
+  assertHookParams(subscribe.all, variables, inputs)
   const [state, setState] = useState({ pending: true })
   useEffect(() => {
     state.pending || setState({ pending: true })
