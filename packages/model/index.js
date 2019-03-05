@@ -28,8 +28,9 @@ export const buildModel = prepare => name => types => {
 
   const get = async id => (await selectQuery.all({ id }))[name][0]
   get.noCache = async id => (await selectQuery.all.noCache({ id }))[name][0]
-  const useGet = id => useQuery.one(selectQuery, { id }, [id])
-  useGet.noCache = id => useQuery.one(selectQuery.noCache, { id }, [id])
+  const useGet = id => useQuery.one(selectQuery, id ? { id } : null, [id])
+  useGet.noCache = id =>
+    useQuery.one(selectQuery.noCache, id ? { id } : null, [id])
 
   return {
     insertQuery,
@@ -49,7 +50,8 @@ export const buildModel = prepare => name => types => {
     subscribe: (id, sub) => subscribeQuery.one(sub, { id }),
     remove: id => deleteQuery({ id }),
     useGet,
-    useSubscribe: id => useSubscribe.one(subscribeQuery, { id }, [id]),
+    useSubscribe: id =>
+      useSubscribe.one(subscribeQuery, id ? { id } : null, [id]),
     useRemove: id => useMutation(deleteQuery, { id }, [id]),
     useAdd: (o, inputs) => useMutation(insertQuery, { objects: [o] }, inputs),
     useUpdate: id => {
@@ -58,9 +60,12 @@ export const buildModel = prepare => name => types => {
       return {
         pending,
         error,
-        run: useCallback(({ id: overrideId, ...changes }) => {
-          return run({ id: overrideId || id, changes })
-        }, [id])
+        run: useCallback(
+          ({ id: overrideId, ...changes }) => {
+            return run({ id: overrideId || id, changes })
+          },
+          [id],
+        ),
       }
     },
   }
