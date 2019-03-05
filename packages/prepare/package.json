@@ -1,6 +1,6 @@
 {
   "name": "@hasura-ws/prepare",
-  "version": "0.1.5",
+  "version": "0.1.7",
   "description": "Query builder for hasura-ws",
   "main": "dist/index.js",
   "module": "index.js",
