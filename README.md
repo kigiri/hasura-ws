@@ -143,8 +143,8 @@ console.log(user.email)
 
 // in all of those case, you can bypass the cache with `.noCache`
 getUserEmail.noCache({ id: 1 })
-getUserEmail.all.noCache({ id: 1 })
-getUserEmail.one.noCache({ id: 1 })
+getUserEmail.noCache.all({ id: 1 })
+getUserEmail.noCache.one({ id: 1 })
 
 // mutation with variables
 const updateUser = prepare(`

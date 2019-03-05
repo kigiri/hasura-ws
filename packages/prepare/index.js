@@ -51,12 +51,12 @@ export const prepareQuery = (client, query) => {
 
   const run = async variables => Object.values(await runAll(variables))[0]
   run.all = runAll
-  runAll.noCache = async variables =>
-    client.runFromString(build(variables, true).payload)
+  run.one = async variables => (await run(variables))[0]
   run.noCache = async variables =>
     Object.values(await client.runFromString(build(variables, true).payload))[0]
-  run.one = async variables => (await run(variables))[0]
-  run.one.noCache = async variables => (await run.noCache(variables))[0]
+  run.noCache.one = async variables => (await run.noCache(variables))[0]
+  run.noCache.all = async variables =>
+    client.runFromString(build(variables, true).payload)
 
   return run
 }
