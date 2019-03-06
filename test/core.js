@@ -33,6 +33,54 @@ fail({
   },
 })
 
+const insertTestMutation = `
+mutation insert_test($test: test_insert_input!) {
+  insert_test (objects: [$test]) {
+    returning { id }
+  }
+}
+`
+
+ok({
+  description: 'I get the correct result on a successfull mutation',
+  test: async ({ run }) => {
+    const result = await run(insertTestMutation, {
+      test: { requiredField: 'wesh' },
+    })
+    return typeof result.insert_test.returning[0].id
+  },
+  expect: 'number',
+})
+
+fail({
+  description: 'I get an error if a mutation has no variables',
+  test: ({ run }) => run(insertTestMutation, {}),
+  expect: {
+    code: 'validation-failed',
+    message:
+      'expecting a value for non-null type: test_insert_input! in variableValues',
+    path: '$',
+  },
+})
+
+fail({
+  description: 'I get complex error if a mutation has wrong variables values',
+  test: ({ run }) => run(insertTestMutation, { test: {} }),
+  expect: {
+    code: 'constraint-violation',
+    data: null,
+    errors: [
+      {
+        code: 'constraint-violation',
+        error: 'Not-NULL violation. null value in column "requiredField" violates not-null constraint',
+        path: '$.selectionSet.insert_test.args.objects'
+      }
+    ],
+    message: 'Not-NULL violation. null value in column "requiredField" violates not-null constraint',
+    path: '$.selectionSet.insert_test.args.objects'
+  },
+})
+
 // console.log('starting hasura test db...')
 // execSync(`sudo docker-compose -f ${__dirname}/docker-compose.yaml up -d`)
 
@@ -54,4 +102,3 @@ run(() =>
     // execSync(`sudo docker-compose -f ${__dirname}/docker-compose.yaml down`)
     process.exit(exitCode || 0)
   })
-  
