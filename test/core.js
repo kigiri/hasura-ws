@@ -26,7 +26,7 @@ ok({
 
 fail({
   description: 'I get an error if send a wrong query',
-  test: ({ run }) => run('pouet', ''),
+  test: ({ run }) => run('pouet'),
   expect: {
     message:
       'parsing ClientMessage failed: Error in $.payload.query: parsing the graphql query failed',
@@ -43,7 +43,7 @@ run(() =>
     //debug: true,
   }),
 )
-  .then(err => console.log('all tests pass !'))
+  .then(() => console.log('all tests pass !'))
   .catch(err => {
     console.log('failed!')
     console.log(err)
