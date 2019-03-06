@@ -40,12 +40,12 @@ const buildClient = openWebSocket => ({ debug, ...params }) => {
     return err
   }
 
-  const fail = error => {
+  const fail = (handler, error) => {
     if (!handler) {
-      return debug && console.debug('missing handler for message', id)
+      return debug && console.debug('missing handler for message', handler.id)
     }
 
-    handlers.delete(id)
+    handlers.delete(handler.id)
     const err = new HasuraError(error)
     debug && (err.trace = handler.trace.stack)
     return handler.reject(err)
@@ -85,23 +85,25 @@ const buildClient = openWebSocket => ({ debug, ...params }) => {
           return reject(err)
 
         case 'data':
-          if (payload.errors) return fail({ ...payload.errors[0], ...payload })
-          const sub = subscribers.get(id)
-          if (sub) {
-            sub(payload.data)
-            if (handler) {
-              handler.resolve()
-              handlers.delete(id)
-            }
-            return
+          if (payload.errors) {
+            return fail(handler, { ...payload.errors[0], ...payload })
           }
 
-          return handler
-            ? (handler.payload = payload)
-            : debug && console.debug('missing handler for message', id)
+          const sub = subscribers.get(id)
+          if (!sub) {
+            return handler
+              ? (handler.payload = payload)
+              : debug && console.debug('missing handler for message', id)
+          }
+
+          sub(payload.data)
+          if (handler) {
+            handler.resolve()
+            handlers.delete(id)
+          }
 
         case 'error':
-          return fail(payload)
+          return fail(handler, payload)
 
         case 'complete':
           if (!handler) return
@@ -113,7 +115,7 @@ const buildClient = openWebSocket => ({ debug, ...params }) => {
 
   const exec = (id, payload) =>
     new Promise(async (resolve, reject) => {
-      handlers.set(id, { resolve, reject })
+      handlers.set(id, { resolve, reject, id })
       await connection
       if (debug) {
         console.debug(`hasura-ws: <start#${id}>`, JSON.parse(payload))
