@@ -13,15 +13,15 @@ const tester = f => ({ description, test, expect }) => {
 }
 
 export const ok = tester(test => test)
-export const fail = tester(t => args =>
-  Promise.resolve(args)
-    .then(t)
-    .then(
-      result =>
-        Promise.reject(Object.assign(Error('Should have failed'), { result })),
-      err => ({ ...err, message: err.message }),
-    ),
-)
+export const fail = tester(test => async args => {
+  try {
+    const err = Error('Should have failed')
+    err.result = await test(args)
+    return Promise.reject(err)
+  } catch (err) {
+    return { ...err, message: err.message }
+  }
+})
 
 export const run = setup =>
-  tests.reduce((q, t, i) => q.then(t), Promise.resolve(setup()))
+  tests.reduce((q, test) => q.then(test), Promise.resolve(setup()))
