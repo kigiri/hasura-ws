@@ -123,16 +123,17 @@ const buildClient = openWebSocket => ({
   });
 
   const exec = (id, payload) => new Promise(async (resolve, reject) => {
-    handlers.set(id, {
+    const handler = {
       resolve,
       reject,
       id
-    });
+    };
+    handlers.set(id, handler);
     await connection;
 
     if (debug) {
       console.debug(`hasura-ws: <start#${id}>`, JSON.parse(payload));
-      handlers.trace = Error('hasuraClient.exec error');
+      handler.trace = Error('hasuraClient.exec error');
     }
 
     ws.send(`{"type":"start","id":"${id}","payload":${payload}}`);
