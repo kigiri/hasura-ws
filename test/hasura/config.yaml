@@ -1,0 +1,2 @@
+endpoint: http://localhost:3354
+admin_secret: TEST_ME
