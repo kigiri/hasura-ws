@@ -75,7 +75,9 @@ const buildClient = openWebSocket => ({
           return resolve(payload);
 
         case 'connection_error':
-          const err = rejectAllPending(new HasuraError(payload));
+          const err = rejectAllPending(new HasuraError({
+            error: payload
+          }));
           connection = Promise.reject(err);
           return reject(err);
 
@@ -100,16 +102,16 @@ const buildClient = openWebSocket => ({
             return debug && console.debug('missing handler for message', id);
           }
 
-          return handler.payload = payload.errors ? {
+          handlers.delete(id);
+          return handler.reject(new HasuraError(payload.errors ? {
             error: payload.errors[0],
             ...payload
-          } : payload;
+          } : payload));
 
         case 'complete':
-          if (!handler) return; // should never happen
-
+          if (!handler) return;
           handlers.delete(id);
-          return handler.error ? handler.reject(new HasuraError(handler.payload)) : handler.resolve(handler.payload && handler.payload.data);
+          return handler.resolve(handler.payload && handler.payload.data);
       }
     });
   });
