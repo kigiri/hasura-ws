@@ -2,11 +2,12 @@
   "name": "root",
   "private": true,
   "scripts": {
-    "test": "node -r esm test",
+    "test": "node -r esm test/core.js",
     "publish": "lerna run build && git commit -am \"add build files\" && lerna publish"
   },
   "devDependencies": {
     "esm": "^3.2.11",
-    "lerna": "^3.0.0-rc.0"
+    "lerna": "^3.0.0-rc.0",
+    "ws": "^6.1.4"
   }
 }
