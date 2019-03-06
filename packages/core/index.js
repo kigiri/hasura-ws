@@ -40,6 +40,17 @@ const buildClient = openWebSocket => ({ debug, ...params }) => {
     return err
   }
 
+  const fail = error => {
+    if (!handler) {
+      return debug && console.debug('missing handler for message', id)
+    }
+
+    handlers.delete(id)
+    const err = new HasuraError(error)
+    debug && (err.trace = handler.trace.stack)
+    return handler.reject(err)
+  }
+
   let connection = new Promise((resolve, reject) => {
     ws.on('error', event =>
       reject(
@@ -71,10 +82,10 @@ const buildClient = openWebSocket => ({ debug, ...params }) => {
 
         case 'connection_error':
           const err = rejectAllPending(new HasuraError({ error: payload }))
-          connection = Promise.reject(err)
           return reject(err)
 
         case 'data':
+          if (payload.errors) return fail({ ...payload.errors[0], ...payload })
           const sub = subscribers.get(id)
           if (sub) {
             sub(payload.data)
@@ -90,18 +101,7 @@ const buildClient = openWebSocket => ({ debug, ...params }) => {
             : debug && console.debug('missing handler for message', id)
 
         case 'error':
-          if (!handler) {
-            return debug && console.debug('missing handler for message', id)
-          }
-
-          handlers.delete(id)
-          return handler.reject(
-            new HasuraError(
-              payload.errors
-                ? { error: payload.errors[0], ...payload }
-                : payload,
-            ),
-          )
+          return fail(payload)
 
         case 'complete':
           if (!handler) return
@@ -115,7 +115,10 @@ const buildClient = openWebSocket => ({ debug, ...params }) => {
     new Promise(async (resolve, reject) => {
       handlers.set(id, { resolve, reject })
       await connection
-      debug && console.debug(`hasura-ws: <start#${id}>`, JSON.parse(payload))
+      if (debug) {
+        console.debug(`hasura-ws: <start#${id}>`, JSON.parse(payload))
+        handlers.trace = Error('hasuraClient.exec error')
+      }
       ws.send(`{"type":"start","id":"${id}","payload":${payload}}`)
     })
 
