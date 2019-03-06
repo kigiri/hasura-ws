@@ -72,12 +72,14 @@ fail({
     errors: [
       {
         code: 'constraint-violation',
-        error: 'Not-NULL violation. null value in column "requiredField" violates not-null constraint',
-        path: '$.selectionSet.insert_test.args.objects'
-      }
+        error:
+          'Not-NULL violation. null value in column "requiredField" violates not-null constraint',
+        path: '$.selectionSet.insert_test.args.objects',
+      },
     ],
-    message: 'Not-NULL violation. null value in column "requiredField" violates not-null constraint',
-    path: '$.selectionSet.insert_test.args.objects'
+    message:
+      'Not-NULL violation. null value in column "requiredField" violates not-null constraint',
+    path: '$.selectionSet.insert_test.args.objects',
   },
 })
 

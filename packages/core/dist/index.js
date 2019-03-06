@@ -50,6 +50,17 @@ const buildClient = openWebSocket => ({
     return err;
   };
 
+  const fail = (handler, error) => {
+    if (!handler) {
+      return debug && console.debug('missing handler for message', handler.id);
+    }
+
+    handlers.delete(handler.id);
+    const err = new HasuraError(error);
+    debug && (err.trace = handler.trace.stack);
+    return handler.reject(err);
+  };
+
   let connection = new Promise((resolve, reject) => {
     ws.on('error', event => reject(rejectAllPending(new HasuraError({
       error: 'WebSocket connection failed',
@@ -78,35 +89,30 @@ const buildClient = openWebSocket => ({
           const err = rejectAllPending(new HasuraError({
             error: payload
           }));
-          connection = Promise.reject(err);
           return reject(err);
 
         case 'data':
+          if (payload.errors) {
+            return fail(handler, { ...payload.errors[0],
+              ...payload
+            });
+          }
+
           const sub = subscribers.get(id);
 
-          if (sub) {
-            sub(payload.data);
-
-            if (handler) {
-              handler.resolve();
-              handlers.delete(id);
-            }
-
-            return;
+          if (!sub) {
+            return handler ? handler.payload = payload : debug && console.debug('missing handler for message', id);
           }
 
-          return handler ? handler.payload = payload : debug && console.debug('missing handler for message', id);
+          sub(payload.data);
+
+          if (handler) {
+            handler.resolve();
+            handlers.delete(id);
+          }
 
         case 'error':
-          if (!handler) {
-            return debug && console.debug('missing handler for message', id);
-          }
-
-          handlers.delete(id);
-          return handler.reject(new HasuraError(payload.errors ? {
-            error: payload.errors[0],
-            ...payload
-          } : payload));
+          return fail(handler, payload);
 
         case 'complete':
           if (!handler) return;
@@ -119,10 +125,16 @@ const buildClient = openWebSocket => ({
   const exec = (id, payload) => new Promise(async (resolve, reject) => {
     handlers.set(id, {
       resolve,
-      reject
+      reject,
+      id
     });
     await connection;
-    debug && console.debug(`hasura-ws: <start#${id}>`, JSON.parse(payload));
+
+    if (debug) {
+      console.debug(`hasura-ws: <start#${id}>`, JSON.parse(payload));
+      handlers.trace = Error('hasuraClient.exec error');
+    }
+
     ws.send(`{"type":"start","id":"${id}","payload":${payload}}`);
   });
 
