@@ -2,6 +2,10 @@
 
 Minimal javascript graphql websocket client for `hasura`
 
+
+*!! VERY EARLY, UNSTABLE, BARELY TESTED, USE WITH CAUTION !!*
+
+
 ## `@hasura-ws/browser` or `@hasura-ws/node` (for `nodejs` only!)
 
 ### Initialize the client
