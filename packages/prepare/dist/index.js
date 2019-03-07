@@ -27,6 +27,12 @@ const set = (key, value) =>
     ? call('readwrite', 'delete', key)
     : call('readwrite', 'put', value, key);
 
+var idb = /*#__PURE__*/Object.freeze({
+  call: call,
+  get: get,
+  set: set
+});
+
 const hashStr = str => {
   let l = str.length;
   let h = 0xbada55 ^ l;
@@ -203,3 +209,5 @@ exports.prepareMutation = prepareMutation;
 exports.prepareSubscription = prepareSubscription;
 exports.prepare = prepare;
 exports.initPrepare = initPrepare;
+exports.cache = idb;
+exports.hashStr = hashStr;

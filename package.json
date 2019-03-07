@@ -8,6 +8,8 @@
   "devDependencies": {
     "esm": "^3.2.11",
     "lerna": "^3.0.0-rc.0",
+    "react": "^16.8.4",
+    "react-test-render": "^1.1.1",
     "ws": "^6.1.4"
   }
 }
