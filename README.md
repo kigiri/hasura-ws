@@ -14,11 +14,23 @@ import { initClient } from '@hasura-ws/browser'
 // and a jwt token (or the admin secret)
 const client = initClient({
   address: 'ws://localhost:8080/v1alpha1/graphql', // (either ws:// or wss://)
+  debug: false, // log additional information for sent and recieved messages
+
+  // Crendentials :
   adminSecret: '9311f0d7b5caaa183', // your hasura secret
   token: 'eyJhbGciOiJIUzI...w5c', // or a valid JWT token
-  debug: false, // log additional information for sent and recieved messages
 })
+
 ```
+
+You can also delay the connection by passing the crendentials later on:
+```js
+const client = initClient({ address: 'ws://localhost:8080/v1alpha1/graphql' })
+
+// later once you get the user token:
+client.connect({ token: 'eyJhbGciOiJIUzI...w5c' })
+```
+
 
 > `@hasura-ws/node` use `ws` as a websocket client
 

@@ -6,23 +6,9 @@ class HasuraError extends Error {
   }
 }
 
-const buildClient = openWebSocket => ({ debug, ...params }) => {
-  const ws = openWebSocket(params.address)
+const buildClient = openWebSocket => ({ debug, address, ...params }) => {
   const handlers = new Map()
   const subscribers = new Map()
-
-  ws.on('open', () =>
-    ws.send(
-      JSON.stringify({
-        type: 'connection_init',
-        payload: {
-          headers: params.adminSecret
-            ? { 'x-hasura-admin-secret': params.adminSecret }
-            : { Authorization: `Bearer ${params.token}` },
-        },
-      }),
-    ),
-  )
 
   const getId = () => {
     const id = Math.random()
@@ -40,7 +26,7 @@ const buildClient = openWebSocket => ({ debug, ...params }) => {
     return err
   }
 
-  const fail = (handler, error) => {
+  const messageFail = (handler, error) => {
     if (!handler) {
       return debug && console.debug('missing handler for message', handler.id)
     }
@@ -51,68 +37,56 @@ const buildClient = openWebSocket => ({ debug, ...params }) => {
     return handler.reject(err)
   }
 
-  let connection = new Promise((resolve, reject) => {
-    ws.on('error', event =>
-      reject(
-        rejectAllPending(
-          new HasuraError({ error: 'WebSocket connection failed', event }),
-        ),
-      ),
-    )
+  const handleMessage = (data, resolve, reject) => {
+    if (data === '{"type":"ka"}') return // ignore keep alive
 
-    ws.on('close', event =>
-      reject(
-        rejectAllPending(
-          new HasuraError({ error: 'WebSocket connection closed', event }),
-        ),
-      ),
-    )
+    const { type, payload, id } = JSON.parse(data)
+    const handler = handlers.get(id)
 
-    ws.on('message', data => {
-      if (data === '{"type":"ka"}') return // ignore keep alive
+    debug && console.debug(`hasura-ws: <${type}#${id}>`, payload)
 
-      const { type, payload, id } = JSON.parse(data)
-      const handler = handlers.get(id)
+    switch (type) {
+      case 'connection_ack':
+        return resolve(payload)
 
-      debug && console.debug(`hasura-ws: <${type}#${id}>`, payload)
+      case 'connection_error':
+        const err = rejectAllPending(new HasuraError({ error: payload }))
+        return reject(err)
 
-      switch (type) {
-        case 'connection_ack':
-          return resolve(payload)
+      case 'data':
+        if (payload.errors) {
+          return messageFail(handler, { ...payload.errors[0], ...payload })
+        }
 
-        case 'connection_error':
-          const err = rejectAllPending(new HasuraError({ error: payload }))
-          return reject(err)
+        const sub = subscribers.get(id)
+        if (!sub) {
+          return handler
+            ? (handler.payload = payload)
+            : debug && console.debug('missing handler for message', id)
+        }
 
-        case 'data':
-          if (payload.errors) {
-            return fail(handler, { ...payload.errors[0], ...payload })
-          }
-
-          const sub = subscribers.get(id)
-          if (!sub) {
-            return handler
-              ? (handler.payload = payload)
-              : debug && console.debug('missing handler for message', id)
-          }
-
-          sub(payload.data)
-          if (handler) {
-            handler.resolve()
-            handlers.delete(id)
-          }
-
-        case 'error':
-          return fail(handler, payload)
-
-        case 'complete':
-          if (!handler) return
+        sub(payload.data)
+        if (handler) {
+          handler.resolve()
           handlers.delete(id)
-          return handler.resolve(handler.payload && handler.payload.data)
-      }
-    })
-  })
+        }
 
+      case 'error':
+        return messageFail(handler, payload)
+
+      case 'complete':
+        if (!handler) return
+        handlers.delete(id)
+        return handler.resolve(handler.payload && handler.payload.data)
+    }
+  }
+
+  const handleFail = (event, type) =>
+    rejectAllPending(
+      new HasuraError({ error: `WebSocket connection ${type}`, event }),
+    )
+
+  const ws = openWebSocket(address)
   const exec = (id, payload) =>
     new Promise(async (resolve, reject) => {
       const handler = { resolve, reject, id }
@@ -140,8 +114,40 @@ const buildClient = openWebSocket => ({ debug, ...params }) => {
     }
   }
 
+  const connection = new Promise((resolve, reject) => {
+    ws.on('error', event => reject(handleFail(event, 'failed')))
+    ws.on('close', event => {
+      reject(handleFail(event, 'close'))
+      connection = setPending()
+    })
+
+    ws.on('message', data => handleMessage(data, resolve, reject))
+  })
+
+  const connect = async ({ adminSecret, token }) => {
+    if (!ws.readyState) {
+      console.log(ws.readyState)
+      await new Promise(s => ws.on('open', s))
+    }
+
+    const payload = {
+      headers: adminSecret
+        ? { 'x-hasura-admin-secret': adminSecret }
+        : { Authorization: `Bearer ${token}` },
+    }
+
+    ws.send(JSON.stringify({ type: 'connection_init', payload }))
+
+    return connection
+  }
+
+  if (params.adminSecret || params.token) {
+    connect(params)
+  }
+
   return {
     ws,
+    connect,
     connection,
     runFromString,
     subscribeFromString,

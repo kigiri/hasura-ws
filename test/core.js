@@ -1,8 +1,9 @@
 import { execSync } from 'child_process'
-import { deepStrictEqual } from 'assert'
 import WebSocket from 'ws'
 import { ok, fail, run } from './tester.js'
 import { buildClient } from '../packages/core/index.js'
+
+const initClient = buildClient(address => new WebSocket(address, 'graphql-ws'))
 
 ok({
   description: 'I can query the graphql __schema',
@@ -86,11 +87,13 @@ fail({
 // console.log('starting hasura test db...')
 // execSync(`sudo docker-compose -f ${__dirname}/docker-compose.yaml up -d`)
 
+// setTimeout(() => asyncClient.connect({ adminSecret: 'TEST_ME' }), 1000)
+
 run(() =>
-  buildClient(address => new WebSocket(address, 'graphql-ws'))({
+  initClient({
     address: 'ws://localhost:3354/v1alpha1/graphql',
     adminSecret: 'TEST_ME',
-    //debug: true,
+    // debug: true,
   }),
 )
   .then(() => console.log('all tests pass !'))
