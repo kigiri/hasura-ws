@@ -127,3 +127,5 @@ export const prepare = (client, query) => {
 }
 
 export const initPrepare = client => query => prepare(client, query)
+
+export { cache, hashStr }
