@@ -124,7 +124,7 @@ const buildClient = openWebSocket => ({ debug, address, ...params }) => {
     ws.on('message', data => handleMessage(data, resolve, reject))
   })
 
-  const connect = async ({ adminSecret, token }) => {
+  const connect = async ({ adminSecret, token, role, headers }) => {
     if (!ws.readyState) {
       console.log(ws.readyState)
       await new Promise(s => ws.on('open', s))
@@ -132,9 +132,11 @@ const buildClient = openWebSocket => ({ debug, address, ...params }) => {
 
     const payload = {
       headers: adminSecret
-        ? { 'x-hasura-admin-secret': adminSecret }
-        : { Authorization: `Bearer ${token}` },
+        ? { 'x-hasura-admin-secret': adminSecret, ...headers }
+        : { 'x-hasura-access-key': token, ...headers },
     }
+
+    role && (payload.headers['x-hasura-role'] = role)
 
     ws.send(JSON.stringify({ type: 'connection_init', payload }))
 
