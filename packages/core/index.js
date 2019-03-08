@@ -7,6 +7,7 @@ class HasuraError extends Error {
 }
 
 const buildClient = openWebSocket => ({ debug, address, ...params }) => {
+  let connection
   const handlers = new Map()
   const subscribers = new Map()
 
@@ -114,7 +115,7 @@ const buildClient = openWebSocket => ({ debug, address, ...params }) => {
     }
   }
 
-  const connection = new Promise((resolve, reject) => {
+  connection = new Promise((resolve, reject) => {
     ws.on('error', event => reject(handleFail(event, 'failed')))
     ws.on('close', event => {
       reject(handleFail(event, 'close'))
