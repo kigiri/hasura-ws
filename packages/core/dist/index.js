@@ -166,7 +166,7 @@ const buildClient = openWebSocket => ({
         'x-hasura-admin-secret': adminSecret,
         ...headers
       } : {
-        'x-hasura-access-key': token,
+        'Authorization': `Bearer ${token}`,
         ...headers
       }
     };
