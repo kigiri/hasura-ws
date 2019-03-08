@@ -151,7 +151,9 @@ const buildClient = openWebSocket => ({
 
   const connect = async ({
     adminSecret,
-    token
+    token,
+    role,
+    headers
   }) => {
     if (!ws.readyState) {
       console.log(ws.readyState);
@@ -160,11 +162,14 @@ const buildClient = openWebSocket => ({
 
     const payload = {
       headers: adminSecret ? {
-        'x-hasura-admin-secret': adminSecret
+        'x-hasura-admin-secret': adminSecret,
+        ...headers
       } : {
-        Authorization: `Bearer ${token}`
+        'x-hasura-access-key': token,
+        ...headers
       }
     };
+    role && (payload.headers['x-hasura-role'] = role);
     ws.send(JSON.stringify({
       type: 'connection_init',
       payload
