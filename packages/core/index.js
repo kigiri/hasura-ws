@@ -134,7 +134,7 @@ const buildClient = openWebSocket => ({ debug, address, ...params }) => {
     const payload = {
       headers: adminSecret
         ? { 'x-hasura-admin-secret': adminSecret, ...headers }
-        : { 'x-hasura-access-key': token, ...headers },
+        : { 'Authorization': `Bearer ${token}`, ...headers },
     }
 
     role && (payload.headers['x-hasura-role'] = role)
