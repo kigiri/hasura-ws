@@ -19,7 +19,6 @@ const buildClient = openWebSocket => ({
   address,
   ...params
 }) => {
-  let connection;
   const handlers = new Map();
   const subscribers = new Map();
 
@@ -41,9 +40,9 @@ const buildClient = openWebSocket => ({
     return err;
   };
 
-  const messageFail = (handler, error) => {
+  const messageFail = (handler, error, id) => {
     if (!handler) {
-      return debug && console.debug('missing handler for message', handler.id);
+      return debug && console.debug('missing handler for message', id);
     }
 
     handlers.delete(handler.id);
@@ -77,7 +76,7 @@ const buildClient = openWebSocket => ({
         if (payload.errors) {
           return messageFail(handler, { ...payload.errors[0],
             ...payload
-          });
+          }, id);
         }
 
         const sub = subscribers.get(id);
@@ -94,7 +93,7 @@ const buildClient = openWebSocket => ({
         }
 
       case 'error':
-        return messageFail(handler, payload);
+        return messageFail(handler, payload, id);
 
       case 'complete':
         if (!handler) return;
@@ -141,11 +140,10 @@ const buildClient = openWebSocket => ({
     };
   };
 
-  connection = new Promise((resolve, reject) => {
+  const connection = new Promise((resolve, reject) => {
     ws.on('error', event => reject(handleFail(event, 'failed')));
     ws.on('close', event => {
       reject(handleFail(event, 'close'));
-      connection = setPending();
     });
     ws.on('message', data => handleMessage(data, resolve, reject));
   });
