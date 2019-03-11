@@ -26,9 +26,9 @@ const buildClient = openWebSocket => ({ debug, address, ...params }) => {
     return err
   }
 
-  const messageFail = (handler, error) => {
+  const messageFail = (handler, error, id) => {
     if (!handler) {
-      return debug && console.debug('missing handler for message', handler.id)
+      return debug && console.debug('missing handler for message', id)
     }
 
     handlers.delete(handler.id)
@@ -55,7 +55,7 @@ const buildClient = openWebSocket => ({ debug, address, ...params }) => {
 
       case 'data':
         if (payload.errors) {
-          return messageFail(handler, { ...payload.errors[0], ...payload })
+          return messageFail(handler, { ...payload.errors[0], ...payload }, id)
         }
 
         const sub = subscribers.get(id)
@@ -72,7 +72,7 @@ const buildClient = openWebSocket => ({ debug, address, ...params }) => {
         }
 
       case 'error':
-        return messageFail(handler, payload)
+        return messageFail(handler, payload, id)
 
       case 'complete':
         if (!handler) return
