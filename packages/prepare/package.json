@@ -1,6 +1,6 @@
 {
   "name": "@hasura-ws/prepare",
-  "version": "0.1.15",
+  "version": "0.1.16",
   "description": "Query builder for hasura-ws",
   "main": "dist/index.js",
   "module": "index.js",
@@ -27,7 +27,7 @@
   },
   "homepage": "https://github.com/kigiri/hasura-ws#readme",
   "dependencies": {
-    "@hasura-ws/core": "^0.1.15"
+    "@hasura-ws/core": "^0.1.16"
   },
   "devDependencies": {
     "rollup": "^1.2.2",
