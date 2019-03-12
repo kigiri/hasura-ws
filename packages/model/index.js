@@ -26,19 +26,17 @@ export const buildModel = prepare => name => types => {
     delete_${name} (where: {id: {_eq: $id}}) { affected_rows }
   }`)
 
-  const get = async id => (await selectQuery.all({ id }))[name][0]
   const noCache = async id => (await selectQuery.noCache.all({ id }))[name][0]
-  const useGet = id => useQuery.one(selectQuery, id ? { id } : null, [id])
   noCache.useGet = id =>
     useQuery.one(selectQuery.noCache, id ? { id } : null, [id])
 
   return {
+    noCache,
     insertQuery,
     deleteQuery,
     updateQuery,
     selectQuery,
-    get,
-    noCache,
+    get: async id => (await selectQuery.all({ id }))[name][0],
     add: async o => {
       const isArray = Array.isArray(o)
       const result = await insertQuery.all({ objects: isArray ? o : [o] })
@@ -50,7 +48,7 @@ export const buildModel = prepare => name => types => {
     update: ({ id, ...changes }) => updateQuery({ id, changes }),
     subscribe: (id, sub) => subscribeQuery.one(sub, { id }),
     remove: id => deleteQuery({ id }),
-    useGet,
+    useGet: id => useQuery.one(selectQuery, id ? { id } : null, [id]),
     useSubscribe: id =>
       useSubscribe.one(subscribeQuery, id ? { id } : null, [id]),
     useRemove: id => useMutation(deleteQuery, { id }, [id]),
