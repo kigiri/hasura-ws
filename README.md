@@ -347,7 +347,7 @@ const ids = await userModel.add([
 ids // [ 1, 2 ]
 ```
 
-### `model.get`
+### `model.get` or `model.noCache.get`
 
 takes an id
 
@@ -392,13 +392,12 @@ await userModel.remove(1)
 
 The model also expose react hooks for each actions:
 
-- `useGet(id)`
-- `useGet.one(id)`
-- `useAdd({ a: 1, b: 2 }, [1, 2])`
-- `useRemove(id)`
-- `useUpdate({ id, a: 1, b: 2 }, [1, 2])`
-- `useSubscribe(id)`
-- `useSubscribe.one(id)`
+- `.useGet(id)` or `.noCache.useGet`
+- `.useAdd({ a: 1, b: 2 }, [1, 2])`
+- `.useRemove(id)`
+- `.useUpdate({ id, a: 1, b: 2 }, [1, 2])`
+- `.useSubscribe(id)`
+- `.useSubscribe.one(id)`
 
 It's just the correct hook and the model method.
 
