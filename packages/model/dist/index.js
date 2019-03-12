@@ -31,9 +31,9 @@ const buildModel = prepare => name => types => {
   }`);
 
   const get = async id => (await selectQuery.all({ id }))[name][0];
-  get.noCache = async id => (await selectQuery.all.noCache({ id }))[name][0];
+  const noCache = async id => (await selectQuery.noCache.all({ id }))[name][0];
   const useGet = id => hooks.useQuery.one(selectQuery, id ? { id } : null, [id]);
-  useGet.noCache = id =>
+  noCache.useGet = id =>
     hooks.useQuery.one(selectQuery.noCache, id ? { id } : null, [id]);
 
   return {
@@ -42,6 +42,7 @@ const buildModel = prepare => name => types => {
     updateQuery,
     selectQuery,
     get,
+    noCache,
     add: async o => {
       const isArray = Array.isArray(o);
       const result = await insertQuery.all({ objects: isArray ? o : [o] });
