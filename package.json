@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "test": "node -r esm test/core.js",
-    "publish": "lerna run build && git commit -am \"add build files\" && lerna publish"
+    "publish": "git stash && lerna run build && git commit -am \"add build files\" && lerna publish && git stash pop"
   },
   "devDependencies": {
     "esm": "^3.2.11",
