@@ -109,7 +109,7 @@ This is a promise of the pending connection, if you want to handle reconnect.
 
 Prepare a query, returning an async function to execute the query.
 
-> Enable caching and share subscribes
+> Pre-stringify and share subscribes
 
 ### `initPrepare`
 
@@ -157,11 +157,6 @@ console.log(data.user[0].email)
 const user = await getUserEmail.one({ id: 1 })
 console.log(user.email)
 
-// in all of those case, you can bypass the cache with `.noCache`
-getUserEmail.noCache({ id: 1 })
-getUserEmail.noCache.all({ id: 1 })
-getUserEmail.noCache.one({ id: 1 })
-
 // mutation with variables
 const updateUser = prepare(`
 mutation update_user($id: Int, $changes: user_set_input) {
@@ -195,8 +190,6 @@ userSubscribe.one(({ email }) => console.log(email), { id: 1 })
 
 // and you get `.all` for having the raw result from the client
 userSubscribe.all(data => console.log(data.user[0].email), { id: 1 })
-
-// subscriptions are live so never cached, no `.noCache` here
 ```
 
 ## `@hasura-ws/hooks`
@@ -347,7 +340,7 @@ const ids = await userModel.add([
 ids // [ 1, 2 ]
 ```
 
-### `model.get` or `model.noCache.get`
+### `model.get`
 
 takes an id
 
@@ -392,7 +385,7 @@ await userModel.remove(1)
 
 The model also expose react hooks for each actions:
 
-- `.useGet(id)` or `.noCache.useGet`
+- `.useGet(id)`
 - `.useAdd({ a: 1, b: 2 }, [1, 2])`
 - `.useRemove(id)`
 - `.useUpdate({ id, a: 1, b: 2 }, [1, 2])`
