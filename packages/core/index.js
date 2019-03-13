@@ -71,6 +71,7 @@ const buildClient = openWebSocket => ({ debug, address, ...params }) => {
           handlers.delete(id)
         }
 
+        return
       case 'error':
         return messageFail(handler, payload, id)
 
