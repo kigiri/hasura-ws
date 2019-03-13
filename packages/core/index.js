@@ -31,7 +31,7 @@ const buildClient = openWebSocket => ({ debug, address, ...params }) => {
       return debug && console.debug('missing handler for message', id)
     }
 
-    handlers.delete(handler.id)
+    handlers.delete(id)
     const err = new HasuraError(error)
     debug && (err.trace = handler.trace.stack)
     return handler.reject(err)
