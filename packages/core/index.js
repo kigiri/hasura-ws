@@ -43,7 +43,7 @@ const buildClient = openWebSocket => ({ debug, address, ...params }) => {
     const { type, payload, id } = JSON.parse(data)
     const handler = handlers.get(id)
 
-    debug && console.debug(`hasura-ws: <${type}#${id}>`, payload)
+    debug && console.debug(`hasura-ws: <${type}#${id || ''}>`, payload)
 
     switch (type) {
       case 'connection_ack':
@@ -110,6 +110,7 @@ const buildClient = openWebSocket => ({ debug, address, ...params }) => {
       execution: exec(id, payload),
       unsubscribe: () => {
         subscribers.delete(id)
+        debug && console.debug(`hasura-ws: <stop#${id}>`)
         ws.send(`{"type":"stop","id":"${id}"}`)
       },
     }
@@ -126,14 +127,13 @@ const buildClient = openWebSocket => ({ debug, address, ...params }) => {
 
   const connect = async ({ adminSecret, token, role, headers }) => {
     if (!ws.readyState) {
-      console.log(ws.readyState)
       await new Promise(s => ws.on('open', s))
     }
 
     const payload = {
       headers: adminSecret
         ? { 'x-hasura-admin-secret': adminSecret, ...headers }
-        : { 'Authorization': `Bearer ${token}`, ...headers },
+        : { Authorization: `Bearer ${token}`, ...headers },
     }
 
     role && (payload.headers['x-hasura-role'] = role)
