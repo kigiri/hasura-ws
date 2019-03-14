@@ -1,11 +1,13 @@
 class HasuraError extends Error {
-  constructor({ error, ...props }) {
+  constructor({ error, extensions, ...props }) {
     super(error)
     Object.assign(this, props)
+    Object.assign(this, extensions)
     Error.captureStackTrace && Error.captureStackTrace(this, HasuraError)
   }
 }
 
+const flatErrors = (acc, err) => acc.concat(err.errors ? err.errors : [ err ])
 const buildClient = openWebSocket => ({ debug, address, ...params }) => {
   const handlers = new Map()
   const subscribers = new Map()
@@ -55,7 +57,9 @@ const buildClient = openWebSocket => ({ debug, address, ...params }) => {
 
       case 'data':
         if (payload.errors) {
-          return messageFail(handler, { ...payload.errors[0], ...payload }, id)
+          const errors = payload.errors.reduce(flatErrors, [])
+          const { errors: _, ...rest } = payload
+          return messageFail(handler, { ...errors[0], errors, ...rest }, id)
         }
 
         const sub = subscribers.get(id)
