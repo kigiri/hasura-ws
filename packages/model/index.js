@@ -44,7 +44,7 @@ export const buildModel = prepare => (name, key = 'id', type = 'Int') => {
       selectQuery,
       subscribeQuery,
       get: _ => selectQuery.one({ [key]: _ }),
-      subscribe: (_, sub) => subscribeQuery.one(sub, { [key]: _ }),
+      subscribe: (sub, _) => subscribeQuery.one(sub, { [key]: _ }),
     }
   }
 }

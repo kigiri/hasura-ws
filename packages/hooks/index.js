@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { prepare } from '@hasura-ws/prepare'
+import { buildModel } from '@hasura-ws/model'
 
 export const ERR = Symbol('error')
 export const PENDING = Symbol('pending')
@@ -76,7 +77,7 @@ const guessHook = query => {
 }
 
 export const prepareWithHooks = (client, query) => {
-  const prep = prepare(query)
+  const prep = prepare(client, query)
   const hook = guessHook(query)
   const map = exec => (variables, inputs) => hook(exec, variables, inputs)
   prep.use = map(prep)

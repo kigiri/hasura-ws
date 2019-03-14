@@ -2,6 +2,10 @@ const get = _ => Object.values(_)[0]
 const getAll = _ => _
 const getOne = _ => Object.values(_)[0][0]
 export const prepare = ({ runFromString, subscribeFromString }, query) => {
+  if (typeof query !== 'string') {
+    throw Error(`Query must be a string but was ${typeof query}`)
+  }
+
   const payload = JSON.stringify({ query })
   const noVars = payload
   const base = payload.slice(0, -1)
@@ -16,10 +20,10 @@ export const prepare = ({ runFromString, subscribeFromString }, query) => {
     if (stringified === '{}') return noVars
     return `${base},"variables":${stringified}}`
   }
-  const map = query.test(/^\s*subscription\s/)
+  const map = /^\s*subscription\s/.test(query)
     ? mapper => (sub, variables) =>
-        exec(value => sub(mapper(variables)), build(variables))
-    : mapper => async variables => mapper(await exec(build(variables)))
+        subscribeFromString(value => sub(mapper(value)), build(variables))
+    : mapper => async variables => mapper(await runFromString(build(variables)))
 
   const run = map(get)
   run.all = map(getAll)

@@ -1,14 +1,10 @@
-import { execSync } from 'child_process'
-import WebSocket from 'ws'
 import { ok, fail, run } from './tester.js'
-import { buildClient } from '../packages/core/index.js'
-
-const initClient = buildClient(address => new WebSocket(address, 'graphql-ws'))
+import { insertTestMutation } from './queries.js'
 
 ok({
-  description: 'I can query the graphql __schema',
-  test: ({ run }) =>
-    run(`
+  description: 'client.run: I can query the graphql __schema',
+  test: ({ client }) =>
+    client.run(`
   query {
     __schema {
       queryType {
@@ -26,26 +22,18 @@ ok({
 })
 
 fail({
-  description: 'I get an error if send a wrong query',
-  test: ({ run }) => run('pouet'),
+  description: 'client.run: I get an error if send a wrong query',
+  test: ({ client }) => client.run('pouet'),
   expect: {
     message:
       'parsing ClientMessage failed: Error in $.payload.query: parsing the graphql query failed',
   },
 })
 
-const insertTestMutation = `
-mutation insert_test($test: test_insert_input!) {
-  insert_test (objects: [$test]) {
-    returning { id }
-  }
-}
-`
-
 ok({
-  description: 'I get the correct result on a successfull mutation',
-  test: async ({ run }) => {
-    const result = await run(insertTestMutation, {
+  description: 'client.run: I get the correct result on a successfull mutation',
+  test: async ({ client }) => {
+    const result = await client.run(insertTestMutation, {
       test: { requiredField: 'wesh' },
     })
     return typeof result.insert_test.returning[0].id
@@ -54,8 +42,8 @@ ok({
 })
 
 fail({
-  description: 'I get an error if a mutation has no variables',
-  test: ({ run }) => run(insertTestMutation, {}),
+  description: 'client.run: I get an error if a mutation has no variables',
+  test: ({ client }) => client.run(insertTestMutation, {}),
   expect: {
     code: 'validation-failed',
     message:
@@ -65,8 +53,8 @@ fail({
 })
 
 fail({
-  description: 'I get complex error if a mutation has wrong variables values',
-  test: ({ run }) => run(insertTestMutation, { test: {} }),
+  description: 'client.run: I get complex error if a mutation has wrong variables values',
+  test: ({ client }) => client.run(insertTestMutation, { test: {} }),
   expect: {
     code: 'constraint-violation',
     data: null,
@@ -83,27 +71,3 @@ fail({
     path: '$.selectionSet.insert_test.args.objects',
   },
 })
-
-// console.log('starting hasura test db...')
-// execSync(`sudo docker-compose -f ${__dirname}/docker-compose.yaml up -d`)
-
-// setTimeout(() => asyncClient.connect({ adminSecret: 'TEST_ME' }), 1000)
-
-run(() =>
-  initClient({
-    address: 'ws://localhost:3354/v1alpha1/graphql',
-    adminSecret: 'TEST_ME',
-    // debug: true,
-  }),
-)
-  .then(() => console.log('all tests pass !'))
-  .catch(err => {
-    console.log('failed!')
-    console.log(err)
-    return 1
-  })
-  .then(exitCode => {
-    console.log('stoping hasura test db...')
-    // execSync(`sudo docker-compose -f ${__dirname}/docker-compose.yaml down`)
-    process.exit(exitCode || 0)
-  })

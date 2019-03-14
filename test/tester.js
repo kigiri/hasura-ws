@@ -7,7 +7,6 @@ const tester = f => ({ description, test, expect }) => {
   tests.push(async ctx => {
     console.debug(count, description)
     deepStrictEqual(await f(test)(ctx), expect)
-    console.debug('success\n')
     return ctx
   })
 }
@@ -18,8 +17,8 @@ export const fail = tester(test => async args => {
     const err = Error('Should have failed')
     err.result = await test(args)
     return Promise.reject(err)
-  } catch (err) {
-    return { ...err, message: err.message }
+  } catch ({ message, trace, ...rest }) {
+    return { message, ...rest }
   }
 })
 

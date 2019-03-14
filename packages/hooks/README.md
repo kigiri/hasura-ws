@@ -116,7 +116,7 @@ const MyMutationComponent = ({ id }) => {
 ## `prepareWithHooks`
 A prefered version of `prepare` that also add hooks to your query.
 
-```
+```jsx
 import { initClient } from '@hasura-ws/browser'
 import { initPrepareWithHooks, hasError, isPending } from '@hasura-ws/hooks'
 
@@ -150,7 +150,7 @@ const MySubscribeComponent = ({ id }) => {
 ```
 
 ## `buildModelWithHooks`
-```jsx
+```js
 import { initClient } from '@hasura-ws/browser'
 import { buildModelWithHooks, initPrepareWithHooks } from '@hasura-ws/hooks'
 
@@ -196,7 +196,7 @@ const MyComponent = ({ userId }) => {
 
 This can be use to combine `prepareWithHooks` and `buildModelWithHooks`
 
-```jsx
+```js
 import { initClient } from '@hasura-ws/browser'
 import { initAll } from '@hasura-ws/hooks'
 

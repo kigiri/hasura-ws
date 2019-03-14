@@ -4,6 +4,7 @@ Object.defineProperty(exports, '__esModule', { value: true });
 
 var react = require('react');
 var prepare = require('@hasura-ws/prepare');
+var model = require('@hasura-ws/model');
 
 const ERR = Symbol('error');
 const PENDING = Symbol('pending');
@@ -80,7 +81,7 @@ const guessHook = query => {
 };
 
 const prepareWithHooks = (client, query) => {
-  const prep = prepare.prepare(query);
+  const prep = prepare.prepare(client, query);
   const hook = guessHook(query);
   const map = exec => (variables, inputs) => hook(exec, variables, inputs);
   prep.use = map(prep);
@@ -102,7 +103,7 @@ const getError = (...data) => data.find(_getError);
 const isPending = (...data) => data.some(_isPending);
 
 const buildModelWithHooks = prepare => {
-  const prepModel = buildModel(prepare);
+  const prepModel = model.buildModel(prepare);
 
   return name => fields => {
     const model = prepModel(name)(fields);
