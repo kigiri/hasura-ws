@@ -60,7 +60,7 @@ const buildClient = openWebSocket => ({
       id
     } = JSON.parse(data);
     const handler = handlers.get(id);
-    debug && console.debug(`hasura-ws: <${type}#${id}>`, payload);
+    debug && console.debug(`hasura-ws: <${type}#${id || ''}>`, payload);
 
     switch (type) {
       case 'connection_ack':
@@ -137,6 +137,7 @@ const buildClient = openWebSocket => ({
       execution: exec(id, payload),
       unsubscribe: () => {
         subscribers.delete(id);
+        debug && console.debug(`hasura-ws: <stop#${id}>`);
         ws.send(`{"type":"stop","id":"${id}"}`);
       }
     };
@@ -157,7 +158,6 @@ const buildClient = openWebSocket => ({
     headers
   }) => {
     if (!ws.readyState) {
-      console.log(ws.readyState);
       await new Promise(s => ws.on('open', s));
     }
 
@@ -166,7 +166,7 @@ const buildClient = openWebSocket => ({
         'x-hasura-admin-secret': adminSecret,
         ...headers
       } : {
-        'Authorization': `Bearer ${token}`,
+        Authorization: `Bearer ${token}`,
         ...headers
       }
     };

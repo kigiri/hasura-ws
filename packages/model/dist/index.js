@@ -2,75 +2,54 @@
 
 Object.defineProperty(exports, '__esModule', { value: true });
 
-var react = require('react');
-var hooks = require('@hasura-ws/hooks');
-
-const getId = _ => _.id;
-const buildModel = prepare => name => types => {
-  const all = `{id ${types}}`;
-  const oneById = `($id: Int!) {
-    ${name} (where: {id: {_eq: $id}} limit: 1) ${all}
-  }`;
-
-  const selectQuery = prepare(`query ${oneById}`);
-  const subscribeQuery = prepare(`subscription ${oneById}`);
-
+const buildModel = prepare => (name, key = 'id', type = 'Int') => {
   const insertQuery = prepare(`
   mutation insert_${name} ($objects: [${name}_insert_input!]!){
-    insert_${name} (objects: $objects) { returning { id } }
+    insert_${name} (objects: $objects) { returning { ${key} } }
   }`);
 
   const updateQuery = prepare(`
-  mutation update_${name}($id: Int!, $changes: ${name}_set_input!) {
-    update_${name}(where: {id: {_eq: $id}}, _set: $changes) { affected_rows }
+  mutation update_${name}($${key}: ${type}!, $changes: ${name}_set_input!) {
+    update_${name}(where: {${key}: {_eq: $${key}}}, _set: $changes) { affected_rows }
   }`);
 
   const deleteQuery = prepare(`
-  mutation delete_${name} ($id: Int!) {
-    delete_${name} (where: {id: {_eq: $id}}) { affected_rows }
+  mutation delete_${name} ($${key}: ${type}!) {
+    delete_${name} (where: {${key}: {_eq: $${key}}}) { affected_rows }
   }`);
 
-  const noCache = async id => (await selectQuery.noCache.all({ id }))[name][0];
-  noCache.useGet = id =>
-    hooks.useQuery.one(selectQuery.noCache, id ? { id } : null, [id]);
-
-  return {
-    noCache,
+  const getKey = _ => _[key];
+  const mutations = {
     insertQuery,
     deleteQuery,
     updateQuery,
-    selectQuery,
-    get: async id => (await selectQuery.all({ id }))[name][0],
+    remove: _ => deleteQuery({ [key]: _ }),
+    update: ({ [key]: _, ...changes }) => updateQuery({ [key]: _, changes }),
     add: async o => {
       const isArray = Array.isArray(o);
       const result = await insertQuery.all({ objects: isArray ? o : [o] });
 
       return isArray
-        ? result[`insert_${name}`].returning.map(getId)
-        : result[`insert_${name}`].returning[0].id
+        ? result[`insert_${name}`].returning.map(getKey)
+        : result[`insert_${name}`].returning[0][key]
     },
-    update: ({ id, ...changes }) => updateQuery({ id, changes }),
-    subscribe: (id, sub) => subscribeQuery.one(sub, { id }),
-    remove: id => deleteQuery({ id }),
-    useGet: id => hooks.useQuery.one(selectQuery, id ? { id } : null, [id]),
-    useSubscribe: id =>
-      hooks.useSubscribe.one(subscribeQuery, id ? { id } : null, [id]),
-    useRemove: id => hooks.useMutation(deleteQuery, { id }, [id]),
-    useAdd: (o, inputs) => hooks.useMutation(insertQuery, { objects: [o] }, inputs),
-    useUpdate: id => {
-      const { pending, error, run } = hooks.useMutation(updateQuery, undefined, []);
+  };
 
-      return {
-        pending,
-        error,
-        run: react.useCallback(
-          ({ id: overrideId, ...changes }) => {
-            return run({ id: overrideId || id, changes })
-          },
-          [id],
-        ),
-      }
-    },
+  return fields => {
+    const oneById = `($${key}: ${type}!) {
+      ${name} (where: {${key}: {_eq: $${key}}} limit: 1) {${key} ${fields}}
+    }`;
+
+    const selectQuery = prepare(`query ${oneById}`);
+    const subscribeQuery = prepare(`subscription ${oneById}`);
+
+    return {
+      ...mutations,
+      selectQuery,
+      subscribeQuery,
+      get: _ => selectQuery.one({ [key]: _ }),
+      subscribe: (_, sub) => subscribeQuery.one(sub, { [key]: _ }),
+    }
   }
 };
 
