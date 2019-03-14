@@ -85,8 +85,9 @@ await userModel.update({
 takes an id and a subscription callback
 
 ```js
-const { execution, unsubscribe } = userModel.subscribe(1, user =>
-  console.log(user),
+const { execution, unsubscribe } = userModel.subscribe(
+  user => console.log(user),
+  1,
 )
 ```
 
