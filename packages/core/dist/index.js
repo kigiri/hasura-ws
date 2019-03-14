@@ -145,9 +145,7 @@ const buildClient = openWebSocket => ({
 
   const connection = new Promise((resolve, reject) => {
     ws.on('error', event => reject(handleFail(event, 'failed')));
-    ws.on('close', event => {
-      reject(handleFail(event, 'close'));
-    });
+    ws.on('close', event => reject(handleFail(event, 'close')));
     ws.on('message', data => handleMessage(data, resolve, reject));
   });
 
