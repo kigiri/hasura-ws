@@ -5,14 +5,18 @@ Object.defineProperty(exports, '__esModule', { value: true });
 class HasuraError extends Error {
   constructor({
     error,
+    extensions,
     ...props
   }) {
     super(error);
     Object.assign(this, props);
+    Object.assign(this, extensions);
     Error.captureStackTrace && Error.captureStackTrace(this, HasuraError);
   }
 
 }
+
+const flatErrors = (acc, err) => acc.concat(err.errors ? err.errors : [err]);
 
 const buildClient = openWebSocket => ({
   debug,
@@ -74,8 +78,14 @@ const buildClient = openWebSocket => ({
 
       case 'data':
         if (payload.errors) {
-          return messageFail(handler, { ...payload.errors[0],
-            ...payload
+          const errors = payload.errors.reduce(flatErrors, []);
+          const {
+            errors: _,
+            ...rest
+          } = payload;
+          return messageFail(handler, { ...errors[0],
+            errors,
+            ...rest
           }, id);
         }
 
