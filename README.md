@@ -9,7 +9,7 @@ Minimal javascript graphql websocket client for `hasura`
 
 hasura-ws suite is composed of 4 blocks:
 
-### [`@hasura-ws/browser`](packages/browser) or [`@hasura-ws/node`](packages/node)
+### [`@hasura-ws/browser`](packages/core) or [`@hasura-ws/node`](packages/core)
 The WebSocket hasura client
 
 ### [`@hasura-ws/prepare`](packages/prepare)
@@ -30,6 +30,7 @@ import { initAll, isPending, hasError } from '@hasura-ws/hooks'
 
 const { client, model, prepare } = initAll(initClient({
   address: 'ws://localhost:8080/v1alpha1/graphql',
+  debug: true, // show in the console detailed logs (verbose filter must be on)
 }))
 
 getJWTToken() // Assuming you have a way to get your token
