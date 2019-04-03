@@ -95,7 +95,7 @@ const _hasError = data => Boolean(data && data[ERR])
 const _getError = data => data && data[ERR]
 const _isPending = data => data && data[PENDING]
 export const hasError = (...data) => data.some(_hasError)
-export const getError = (...data) => data.find(_getError)
+export const getError = (...data) => _getError(data.find(_hasError))
 export const isPending = (...data) => data.some(_isPending)
 
 export const buildModelWithHooks = prepare => {
