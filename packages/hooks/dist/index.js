@@ -99,7 +99,7 @@ const _hasError = data => Boolean(data && data[ERR]);
 const _getError = data => data && data[ERR];
 const _isPending = data => data && data[PENDING];
 const hasError = (...data) => data.some(_hasError);
-const getError = (...data) => data.find(_getError);
+const getError = (...data) => _getError(data.find(_hasError));
 const isPending = (...data) => data.some(_isPending);
 
 const buildModelWithHooks = prepare => {
