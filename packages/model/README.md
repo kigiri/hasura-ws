@@ -15,7 +15,7 @@ const client = initClient({
 })
 
 // if you want react hooks, use initPrepareWithHooks from @hasura-ws/hooks
-const prepare = initPrepare(client) 
+const prepare = initPrepare(client)
 const initModel = buildModel(prepare)
 
 // initModel takes 2 arguments: the table name and the field names
@@ -100,7 +100,7 @@ await userModel.update({ email: 'jean@yahoo.fr' }, [1, 2])
 
 ## `model.subscribe`
 
-takes an id and a subscription callback
+takes a subscription callback and an id
 
 ```js
 const { execution, unsubscribe } = userModel.subscribe(
