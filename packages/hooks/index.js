@@ -26,7 +26,7 @@ export const useQuery = (run, variables, inputs) => {
   assertHookParams(run, variables, inputs)
   const [state, setState] = useState({ [PENDING]: true })
   useEffect(() => {
-    state[PENDING] || setState({ [PENDING]: true })
+    _isPending(state) || setState({ [PENDING]: true })
     if (variables === null) return
     run(variables).then(setState, error => setState({ [ERR]: error }))
   }, inputs || genInputs(variables))
@@ -54,7 +54,7 @@ export const useSubscribe = (subscribe, variables, inputs) => {
   assertHookParams(subscribe, variables, inputs)
   const [state, setState] = useState({ [PENDING]: true })
   useEffect(() => {
-    state[PENDING] || setState({ [PENDING]: true })
+    _isPending(state) || setState({ [PENDING]: true })
     if (variables === null) return
     const handle = subscribe(setState, variables)
     handle.execution.catch(error => setState({ [ERR]: error }))
