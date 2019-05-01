@@ -33,7 +33,7 @@
     "rollup": "^1.2.2",
     "rollup-plugin-commonjs": "^9.2.0"
   },
-  "gitHead": "8efa97d1f7edc333eb653c3b4172f1305342467d",
+  "gitHead": "a5cbeca43893f0dd93221b1366aa3113fcc9a5ae",
   "dependencies": {
     "@hasura-ws/model": "^0.3.0",
     "@hasura-ws/prepare": "^0.3.0"
