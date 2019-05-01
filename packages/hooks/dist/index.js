@@ -8,6 +8,7 @@ var model = require('@hasura-ws/model');
 
 const ERR = Symbol('error');
 const PENDING = Symbol('pending');
+const RELOADING = Symbol('reloading');
 const genInputs = variables => (variables ? Object.values(variables) : []);
 const assertHookParams = (run, variables, inputs) => {
   if (typeof run !== 'function') {
@@ -26,11 +27,19 @@ Hooked query always return all the values, so ensure you didn't pass .all`)
   }
 };
 
+const reloadState = (state, setState) => {
+  if (!state || typeof state !== 'object') return
+  if (state[PENDING] || state[RELOADING]) return
+  const copy = Array.isArray(v) ? [...state] : { ...state };
+  copy[RELOADING] = true;
+  setState(copy);
+};
+
 const useQuery = (run, variables, inputs) => {
   assertHookParams(run, variables, inputs);
   const [state, setState] = react.useState({ [PENDING]: true });
   react.useEffect(() => {
-    _isPending(state) || setState({ [PENDING]: true });
+    reloadState(state, setState);
     if (variables === null) return
     run(variables).then(setState, error => setState({ [ERR]: error }));
   }, inputs || genInputs(variables));
@@ -58,7 +67,7 @@ const useSubscribe = (subscribe, variables, inputs) => {
   assertHookParams(subscribe, variables, inputs);
   const [state, setState] = react.useState({ [PENDING]: true });
   react.useEffect(() => {
-    _isPending(state) || setState({ [PENDING]: true });
+    reloadState(state, setState);
     if (variables === null) return
     const handle = subscribe(setState, variables);
     handle.execution.catch(error => setState({ [ERR]: error }));
@@ -98,9 +107,11 @@ const initPrepareWithHooks = client => query =>
 const _hasError = data => Boolean(data && data[ERR]);
 const _getError = data => data && data[ERR];
 const _isPending = data => data && data[PENDING];
+const _isReloading = data => data && data[RELOADING];
 const hasError = (...data) => data.some(_hasError);
 const getError = (...data) => _getError(data.find(_hasError));
 const isPending = (...data) => data.some(_isPending);
+const isReloading = (...data) => data.some(_isReloading);
 
 const buildModelWithHooks = prepare => {
   const prepModel = model.buildModel(prepare);
@@ -128,6 +139,7 @@ const initAll = client => {
 
 exports.ERR = ERR;
 exports.PENDING = PENDING;
+exports.RELOADING = RELOADING;
 exports.useQuery = useQuery;
 exports.useMutation = useMutation;
 exports.useSubscribe = useSubscribe;
@@ -136,5 +148,6 @@ exports.initPrepareWithHooks = initPrepareWithHooks;
 exports.hasError = hasError;
 exports.getError = getError;
 exports.isPending = isPending;
+exports.isReloading = isReloading;
 exports.buildModelWithHooks = buildModelWithHooks;
 exports.initAll = initAll;
