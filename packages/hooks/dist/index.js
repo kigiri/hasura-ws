@@ -30,7 +30,7 @@ Hooked query always return all the values, so ensure you didn't pass .all`)
 const reloadState = (state, setState) => {
   if (!state || typeof state !== 'object') return
   if (state[PENDING] || state[RELOADING]) return
-  const copy = Array.isArray(v) ? [...state] : { ...state };
+  const copy = Array.isArray(state) ? [...state] : { ...state };
   copy[RELOADING] = true;
   setState(copy);
 };
