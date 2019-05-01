@@ -14,7 +14,7 @@ All hooks takes 3 arguments:
 ```jsx
 import { initClient } from '@hasura-ws/browser'
 import { initPrepare } from '@hasura-ws/prepare'
-import { useQuery, isPending, hasError } from '@hasura-ws/hooks'
+import { useQuery, isPending, hasError, isReloading } from '@hasura-ws/hooks'
 
 const client = initClient({
   address: 'ws://localhost:8080/v1alpha1/graphql',
@@ -37,7 +37,7 @@ const MyQueryComponent = ({ id }) => {
   if (!users.length) return 'Not found'
 
   const { email } = users[0]
-  return <div>{email}</div>
+  return <div class={isReloading(users) ? 'loading' : ''}>{email}</div>
 }
 
 // Or using `.one` to get one user directly:
