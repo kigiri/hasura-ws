@@ -9,7 +9,10 @@ import './model.js'
 const initClient = buildClient(address => new WebSocket(address, 'graphql-ws'))
 
 console.log('starting hasura test db...')
-execSync(`sudo docker-compose -f ${__dirname}/docker-compose.yaml up -d`)
+execSync(`docker-compose -f ${__dirname}/docker-compose.yaml up -d`)
+execSync(`hasura migrate apply --endpoint http://localhost:3354`, {
+  cwd: `${__dirname}/hasura`,
+})
 
 // setTimeout(() => asyncClient.connect({ adminSecret: 'TEST_ME' }), 1000)
 

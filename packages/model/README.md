@@ -69,15 +69,33 @@ user.firstname // 'Jean'
 user.lastname // 'Valjean'
 ```
 
-## `model.update`
-
-takes a object of the changes (must include the id)
+or an array of ids
 
 ```js
-await userModel.update({
-  id: 1,
-  email: 'jean@yahoo.fr',
-})
+const users = await userModel.get([1, 2])
+users[0].email // 'jean@email.com'
+users[1].email // 'geger@hotmail.com'
+```
+
+
+## `model.update`
+
+takes an object of the changes (including the id)
+
+```js
+await userModel.update({ id: 1, email: 'jean@yahoo.fr' })
+```
+
+or a an object of the changes and the id
+
+```js
+await userModel.update({ email: 'jean@yahoo.fr' }, 1)
+```
+
+or a an object of the changes and an array of ids
+
+```js
+await userModel.update({ email: 'jean@yahoo.fr' }, [1, 2])
 ```
 
 ## `model.subscribe`
@@ -91,10 +109,26 @@ const { execution, unsubscribe } = userModel.subscribe(
 )
 ```
 
+
+or an array of ids and a subscription callback
+
+```js
+const { execution, unsubscribe } = userModel.subscribe(
+  users => console.log(users),
+  [1, 2],
+)
+```
+
 ## `model.remove`
 
 takes an id
 
 ```js
 await userModel.remove(1)
+```
+
+or an array of id
+
+```js
+await userModel.remove([1, 2])
 ```

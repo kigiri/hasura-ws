@@ -25,8 +25,9 @@ fail({
   description: 'client.run: I get an error if send a wrong query',
   test: ({ client }) => client.run('pouet'),
   expect: {
-    message:
-      'parsing ClientMessage failed: Error in $.payload.query: parsing the graphql query failed',
+    code: 'validation-failed',
+    message: 'not a valid graphql query',
+    path: '$.query',
   },
 })
 
@@ -46,9 +47,8 @@ fail({
   test: ({ client }) => client.run(insertTestMutation, {}),
   expect: {
     code: 'validation-failed',
-    message:
-      'expecting a value for non-null type: test_insert_input! in variableValues',
-    path: '$',
+    message: 'expecting a value for non-nullable variable: test of type: test_insert_input! in variableValues',
+    path: '$.variableValues',
   },
 })
 

@@ -1,6 +1,6 @@
-import { initAll } from '../packages/hooks/index.js'
+import { initPrepare } from '../packages/prepare/index.js'
+import { buildModel } from '../packages/model/index.js'
 import { ok, fail } from './tester.js'
-import { div, h2, hh } from 'react-hyperscript-helpers'
 import { types, isFunction } from 'util'
 
 /*
@@ -9,7 +9,8 @@ import { types, isFunction } from 'util'
 ok({
   description: 'model: I can init prepare and build my model',
   test: context => {
-    Object.assign(context, initAll(context.client))
+    context.prepare = initPrepare(context.client)
+    context.model = buildModel(context.prepare)
     return isFunction(context.model) && isFunction(context.prepare)
   },
   expect: true,
@@ -43,13 +44,6 @@ ok({
       testModel.add,
       testModel.get,
       testModel.subscribe,
-
-      // Hooks
-      testModel.useRemove,
-      testModel.useUpdate,
-      testModel.useAdd,
-      testModel.useGet,
-      testModel.useSubscribe,
     ].every(isFunction)
   },
   expect: true,
@@ -60,8 +54,9 @@ ok({
  */
 ok({
   description: 'model.add: Adding a single element',
-  test: async ({ test }) => {
-    const id = await test.add({ requiredField: 'wesh-1' })
+  test: async context => {
+    const id = await context.test.add({ requiredField: 'wesh-1' })
+    context.firstId = id
     return typeof id
   },
   expect: 'number',
@@ -113,9 +108,15 @@ const getFirstInsertedElementRequiredField = async ({ test, ids }) => {
 }
 
 ok({
-  description: 'model.get: I can get elements',
+  description: 'model.get: I can get one element',
   test: getFirstInsertedElementRequiredField,
   expect: 'wesh-2',
+})
+
+ok({
+  description: 'model.get: I can get multiple elements',
+  test: async ({ test, ids }) => (await test.get(ids)).map(r => r.requiredField),
+  expect: [ 'wesh-2', 'wesh-3' ]
 })
 
 ok({
@@ -146,8 +147,20 @@ fail({
  */
 ok({
   description: 'model.update: I can update an element',
-  test: ({ test, ids }) => test.update({ id: ids[0], requiredField: 'yep' }),
+  test: ({ test, ids }) => test.update({ id: ids[0], requiredField: 'plop' }),
   expect: { affected_rows: 1 },
+})
+
+ok({
+  description: 'model.get: I can get the updated element',
+  test: getFirstInsertedElementRequiredField,
+  expect: 'plop',
+})
+
+ok({
+  description: 'model.update: I can update multiple elements',
+  test: ({ test, ids }) => test.update({ requiredField: 'yep' }, ids),
+  expect: { affected_rows: 2 },
 })
 
 ok({
@@ -162,14 +175,13 @@ fail({
   expect: {
     code: 'parse-failed',
     message: 'expected Text, encountered Number',
-    path: '$.variableValues.requiredField',
+    path: '$.variableValues.changes.requiredField'
   },
 })
 
 /*
  * Model.subscribe
  */
-
 const shouldChange = async (data, timeout = 2000) => {
   let interval
   const currentSize = data.length
@@ -199,32 +211,65 @@ ok({
       throw Error(`Unexpected requiredField value: ${data[0].requiredField}`)
     }
 
-    await test.update({ id, requiredField: 'updated' })
+    await test.update({ requiredField: 'updated' }, id)
     await shouldChange(data)
     unsubscribe()
-    await test.update({ id, requiredField: 'after-math' })
+    await test.update({ requiredField: 'after-math' }, id)
 
     return data.map(e => e.requiredField)
   },
   expect: ['yep', 'updated'],
 })
 
+ok({
+  description: 'model.subscribe: I can subscribe to multiple elements',
+  test: async ({ test, ids }) => {
+    const data = []
+    const { unsubscribe, execution } = test.subscribe(e => data.push(e), ids)
+
+    await execution
+
+    if (!data.length) {
+      throw Error('I should have recieve the initial value after execution')
+    }
+
+    const requireFields = data[0].map(e => e.requiredField).join() 
+    if (requireFields !== 'yep,after-math') {
+      throw Error(`Unexpected requiredField value: ${requireFields}`)
+    }
+
+    await test.update({ requiredField: 'updated' }, ids)
+    await shouldChange(data)
+    unsubscribe()
+    await test.update({ requiredField: 'after-math' }, ids)
+
+    return data.flat().map(e => e.requiredField)
+  },
+  expect: ['yep', 'after-math', 'updated', 'updated'],
+})
+
 fail({
   description: 'model.subscribe: subscribing with an invalid id should fail',
   test: ({ test }) => test.subscribe(_ => _, 'pouet').execution,
   expect: {
-    data: null,
     path: '$',
     code: 'data-exception',
     message: 'invalid input syntax for integer: "pouet"',
-    errors: [
-      {
-        extensions: {
-          code: 'data-exception',
-          path: '$',
-        },
-        message: 'invalid input syntax for integer: "pouet"',
-      },
-    ],
   },
+})
+
+
+/*
+ * Model.remove
+ */
+ok({
+  description: 'model.remove: Removing a single element',
+  test: ({ test, ids }) => test.remove(ids.pop()),
+  expect: { affected_rows: 1 },
+})
+
+ok({
+  description: 'model.remove: Removing multiple element',
+  test: ({ test, ids, firstId }) => test.remove([firstId, ...ids]),
+  expect: { affected_rows: 2 },
 })
