@@ -7,10 +7,7 @@
     "publish": "git stash && lerna run build && git commit -am \"add build files\" && lerna publish && git stash pop"
   },
   "devDependencies": {
-    "esm": "^3.2.11",
-    "lerna": "^3.0.0-rc.0",
-    "react": "^16.8.4",
-    "react-test-render": "^1.1.1",
-    "ws": "^6.1.4"
+    "esm": "^3.2.22",
+    "ws": "^6.2.1"
   }
 }
