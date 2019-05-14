@@ -112,8 +112,8 @@ export const isReloading = (...data) => data.some(_isReloading)
 export const buildModelWithHooks = prepare => {
   const prepModel = buildModel(prepare)
 
-  return name => fields => {
-    const model = prepModel(name)(fields)
+  return (...args) => fields => {
+    const model = prepModel(...args)(fields)
 
     return {
       ...model,
