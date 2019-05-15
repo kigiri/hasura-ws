@@ -114,15 +114,17 @@ export const buildModelWithHooks = prepare => {
 
   return (...args) => fields => {
     const model = prepModel(...args)(fields)
-
     return {
       ...model,
       useRemove: () => useMutation(model.remove),
       useUpdate: () => useMutation(model.update),
       useAdd: () => useMutation(model.add),
-      useGet: id => useQuery(model.selectQuery.one, id ? { id } : null, [id]),
-      useSubscribe: id =>
-        useSubscribe(model.subscribeQuery.one, id ? { id } : null, [id]),
+      useGet: _ => Array.isArray(_)
+        ? useQuery(model.selectQueryAll, { [model.list]: _ }, _)
+        : useQuery(model.selectQuery.one, _ ? { [model.key]: _ } : null, [_]),
+      useSubscribe: _ => Array.isArray(_)
+        ? useSubscribe(model.subscribeQueryAll, { [model.list]: _ }, _)
+        : useSubscribe(model.subscribeQuery.one, _ ? { [model.key]:_ } : null, [_]),
     }
   }
 }

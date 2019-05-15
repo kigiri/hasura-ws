@@ -29,6 +29,8 @@ export const buildModel = prepare => (name, key = 'id', type = 'Int') => {
   const updateOne = ({ [key]: _, ...changes }) => updateQuery({ [key]: _, changes })
 
   const mutations = {
+    key,
+    list,
     insertQuery,
     deleteQuery,
     updateQuery,
@@ -70,7 +72,9 @@ export const buildModel = prepare => (name, key = 'id', type = 'Int') => {
     return {
       ...mutations,
       selectQuery,
+      selectQueryAll,
       subscribeQuery,
+      subscribeQueryAll,
       get: _ => Array.isArray(_)
         ? selectQueryAll({ [list]: _ })
         : selectQuery.one({ [key]: _ }),
