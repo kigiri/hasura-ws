@@ -44,13 +44,18 @@ const buildClient = openWebSocket => ({
     return err;
   };
 
-  const messageFail = (handler, error, id) => {
+  const messageFail = (handler, payload, id) => {
     if (!handler) {
       return debug && console.debug('missing handler for message', id);
     }
 
+    if (payload.errors) {
+      payload.errors = payload.errors.reduce(flatErrors, []);
+      Object.assign(payload, payload.errors[0]);
+    }
+
     handlers.delete(id);
-    const err = new HasuraError(error);
+    const err = new HasuraError(payload);
     debug && (err.trace = handler.trace.stack);
     return handler.reject(err);
   };
@@ -77,18 +82,7 @@ const buildClient = openWebSocket => ({
         return reject(err);
 
       case 'data':
-        if (payload.errors) {
-          const errors = payload.errors.reduce(flatErrors, []);
-          const {
-            errors: _,
-            ...rest
-          } = payload;
-          return messageFail(handler, { ...errors[0],
-            errors,
-            ...rest
-          }, id);
-        }
-
+        if (payload.errors) return messageFail(handler, payload, id);
         const sub = subscribers.get(id);
 
         if (!sub) {

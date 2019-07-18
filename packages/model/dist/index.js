@@ -29,6 +29,10 @@ const buildModel = prepare => (name, key = 'id', type = 'Int') => {
     delete_${name} (where: {id: {_in: $${list}} }) { affected_rows }
   }`);
 
+  const getCountQuery = prepare(
+    `query ${name}_count { ${name}_aggregate { aggregate { count } } }`,
+  );
+
   const getKey = _ => _[key];
   const updateOne = ({ [key]: _, ...changes }) => updateQuery({ [key]: _, changes });
 
@@ -85,6 +89,7 @@ const buildModel = prepare => (name, key = 'id', type = 'Int') => {
       subscribe: (sub, _) => Array.isArray(_)
         ? subscribeQueryAll(sub, { [list]: _ })
         : subscribeQuery.one(sub, { [key]: _ }),
+      getCount: getCountQuery,
     }
   }
 };
