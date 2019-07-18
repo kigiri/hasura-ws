@@ -233,8 +233,8 @@ ok({
       throw Error('I should have recieve the initial value after execution')
     }
 
-    const requireFields = data[0].map(e => e.requiredField).join() 
-    if (requireFields !== 'yep,after-math') {
+    const requireFields = data[0].map(e => e.requiredField).sort().join()
+    if (requireFields !== 'after-math,yep') {
       throw Error(`Unexpected requiredField value: ${requireFields}`)
     }
 
@@ -243,9 +243,9 @@ ok({
     unsubscribe()
     await test.update({ requiredField: 'after-math' }, ids)
 
-    return data.flat().map(e => e.requiredField)
+    return data.flat().map(e => e.requiredField).sort()
   },
-  expect: ['yep', 'after-math', 'updated', 'updated'],
+  expect: ['yep', 'after-math', 'updated', 'updated'].sort(),
 })
 
 fail({
