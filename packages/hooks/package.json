@@ -30,8 +30,8 @@
     "react": ">=16.8.2"
   },
   "devDependencies": {
-    "rollup": "^1.2.2",
-    "rollup-plugin-commonjs": "^9.2.0"
+    "rollup": "^1.26.0",
+    "rollup-plugin-commonjs": "^9.3.4"
   },
   "gitHead": "a5cbeca43893f0dd93221b1366aa3113fcc9a5ae",
   "dependencies": {
