@@ -6,13 +6,13 @@ export const buildModel = prepare => (name, key = 'id', type = 'Int') => {
   }`)
 
   const updateQuery = prepare(`
-  mutation update_${name}($${key}: ${type}!, $changes: ${name}_set_input!) {
-    update_${name}(where: {${key}: {_eq: $${key}}}, _set: $changes) { affected_rows }
+  mutation update_${name} ($${key}: ${type}!, $changes: ${name}_set_input!) {
+    update_${name} (where: {${key}: {_eq: $${key}}}, _set: $changes) { affected_rows }
   }`)
 
   const updateQueryAll = prepare(`
-  mutation update_${name}($${list}: [${type}!], $changes: ${name}_set_input!) {
-    update_${name}(where: {${key}: {_in: $${list}}}, _set: $changes) { affected_rows }
+  mutation update_${name} ($${list}: [${type}!], $changes: ${name}_set_input!) {
+    update_${name} (where: {${key}: {_in: $${list}}}, _set: $changes) { affected_rows }
   }`)
 
   const deleteQuery = prepare(`
@@ -25,9 +25,10 @@ export const buildModel = prepare => (name, key = 'id', type = 'Int') => {
     delete_${name} (where: {id: {_in: $${list}} }) { affected_rows }
   }`)
 
-  const getCountQuery = prepare(
-    `query ${name}_count { ${name}_aggregate { aggregate { count } } }`,
-  )
+  const getCountQuery = prepare(`
+  query ${name}_count {
+    ${name}_aggregate { aggregate { count } }
+  }`)
 
   const getKey = _ => _[key]
   const updateOne = ({ [key]: _, ...changes }) => updateQuery({ [key]: _, changes })
