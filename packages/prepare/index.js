@@ -6,10 +6,10 @@ export const prepare = ({ runFromString, subscribeFromString }, query) => {
     throw Error(`Query must be a string but was ${typeof query}`)
   }
 
-  let [type, name] = /^\s*(\w+)(?:\s+(\S+))?\b/.split(query)
+  let [_, type, name] = query.split(/^\s*(\w+)(?:\s+(\w+))?\b/)
   if (!type) {
     type = 'query'
-  } else if (type !== 'subscription' || type !== 'mutation') {
+  } else if (!/^(subscription|mutation|query)$/.test(type)) {
     throw Error(`Invalid query, type must be query, mutation or subscription`)
   }
   name || (name = `${type}_${query.split(/{\s*(.+?)\b/)[1]}`)
@@ -23,7 +23,7 @@ export const prepare = ({ runFromString, subscribeFromString }, query) => {
         'variables should not be functions, verify the order of your parameters',
       )
     }
-    const stringified = JSON.stringify(variables)
+    const stringified = JSON.stringify(vars)
     if (stringified === '{}') return noVars
     return `${base},"variables":${stringified}}`
   }
