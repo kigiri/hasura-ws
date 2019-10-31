@@ -69,23 +69,37 @@ export const buildModel = prepare => (name, key = 'id', type = 'Int') => {
       ${name} (where: {${key}: {_in: $${list}}}) {${key} ${fields}}
     }`
 
+    const byWhere = `($where: ${name}_bool_exp!) {
+      ${name} (where: $where) {${key} ${fields}}
+    }`
+
     const selectQuery = prepare(`query ${oneById}`)
     const selectQueryAll = prepare(`query ${allById}`)
+    const selectQueryWhere = prepare(`query ${byWhere}`)
     const subscribeQuery = prepare(`subscription ${oneById}`)
     const subscribeQueryAll = prepare(`subscription ${allById}`)
+    const subscribeQueryWhere = prepare(`subscription ${byWhere}`)
 
     return {
       ...mutations,
       selectQuery,
       selectQueryAll,
+      selectQueryWhere,
       subscribeQuery,
       subscribeQueryAll,
-      get: _ => Array.isArray(_)
-        ? selectQueryAll({ [list]: _ })
-        : selectQuery.one({ [key]: _ }),
-      subscribe: (sub, _) => Array.isArray(_)
-        ? subscribeQueryAll(sub, { [list]: _ })
-        : subscribeQuery.one(sub, { [key]: _ }),
+      subscribeQueryWhere,
+      get: _ => {
+        if (Array.isArray(_)) return selectQueryAll({ [list]: _ })
+        return (_ && typeof _ === "object")
+          ? selectQueryWhere({ where: _ })
+          : selectQuery.one({ [key]: _ })
+      },
+      subscribe: (sub, _) => {
+        if (Array.isArray(_)) return subscribeQueryAll(sub, { [list]: _ })
+        return (_ && typeof _ === "object")
+          ? subscribeQueryWhere(sub, { where: _ })
+          : subscribeQuery.one(sub, { [key]: _ })
+      },
       getCount: getCountQuery,
     }
   }
