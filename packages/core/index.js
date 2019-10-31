@@ -29,14 +29,24 @@ const buildClient = openWebSocket => ({ debug, address, log, ...params }) => {
     return err
   }
 
+  const end = (handler, props = {}) => {
+    props.duration = Date.now() - handler.start
+    props.size = handler.size
+    props.name = handler.query
+    props.id = handler.id
+    log('query', props)
+    handlers.delete(handler.id)
+  }
+
   const messageFail = (handler, payload, id) => {
-    if (!handler) return log('missing-handler', { id })
+    if (!handler) return log('missing-handler', { id, type: 'error' })
 
     if (payload.errors) {
       payload.errors = payload.errors.reduce(flatErrors, [])
       Object.assign(payload, payload.errors[0])
     }
 
+    end(handler, { payload, type: 'error' })
     handlers.delete(id)
     const err = new HasuraError(payload)
     debug && (err.trace = handler.trace.stack)
@@ -48,6 +58,7 @@ const buildClient = openWebSocket => ({ debug, address, log, ...params }) => {
 
     const { type, payload, id } = JSON.parse(data)
     const handler = handlers.get(id)
+    handler && (handler.size += data.length)
 
     log('raw', data)
 
@@ -71,17 +82,8 @@ const buildClient = openWebSocket => ({ debug, address, log, ...params }) => {
 
         sub(payload.data)
         if (handler) {
-          const duration = Date.now() - handler.start
-          log('query', {
-            id,
-            type,
-            payload,
-            duration,
-            size: data.length,
-            name: handler.query,
-          })
+          end(handler, { type, payload })
           handler.resolve()
-          handlers.delete(id)
         }
 
         return
@@ -90,7 +92,7 @@ const buildClient = openWebSocket => ({ debug, address, log, ...params }) => {
 
       case 'complete':
         if (!handler) return
-        handlers.delete(id)
+        end(handler, { type, payload })
         return handler.resolve(handler.payload && handler.payload.data)
     }
   }
@@ -104,10 +106,12 @@ const buildClient = openWebSocket => ({ debug, address, log, ...params }) => {
   const exec = (id, payload, name) =>
     new Promise(async (resolve, reject) => {
       const handler = { resolve, reject, id }
-      handlers.set(id, handler)
       await connection
+      handler.id = id
+      handler.size = 0
       handler.start = Date.now()
       handler.query = name
+      handlers.set(id, handler)
       log('start', { id, payload })
       debug && (handler.trace = Error('hasuraClient.exec error'))
       ws.send(`{"type":"start","id":"${id}","payload":${payload}}`)
