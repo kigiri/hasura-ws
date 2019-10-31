@@ -8,7 +8,8 @@ class HasuraError extends Error {
 }
 
 const flatErrors = (acc, err) => acc.concat(err.errors ? err.errors : [ err ])
-const buildClient = openWebSocket => ({ debug, address, ...params }) => {
+const buildClient = openWebSocket => ({ debug, address, log, ...params }) => {
+  log || (log = debug ? console.debug : () => {})
   const handlers = new Map()
   const subscribers = new Map()
 
@@ -29,9 +30,7 @@ const buildClient = openWebSocket => ({ debug, address, ...params }) => {
   }
 
   const messageFail = (handler, payload, id) => {
-    if (!handler) {
-      return debug && console.debug('missing handler for message', id)
-    }
+    if (!handler) return log('missing-handler', { id })
 
     if (payload.errors) {
       payload.errors = payload.errors.reduce(flatErrors, [])
@@ -50,7 +49,7 @@ const buildClient = openWebSocket => ({ debug, address, ...params }) => {
     const { type, payload, id } = JSON.parse(data)
     const handler = handlers.get(id)
 
-    debug && console.debug(`hasura-ws: <${type}#${id || ''}>`, payload)
+    log('raw', data)
 
     switch (type) {
       case 'connection_ack':
@@ -67,11 +66,19 @@ const buildClient = openWebSocket => ({ debug, address, ...params }) => {
         if (!sub) {
           return handler
             ? (handler.payload = payload)
-            : debug && console.debug('missing handler for message', id)
+            : log('missing-handler', { id, type: 'error' })
         }
 
         sub(payload.data)
         if (handler) {
+          const duration = Date.now() - handler.start
+          log('query', {
+            id,
+            type,
+            payload,
+            duration,
+            size: data.length,
+          })
           handler.resolve()
           handlers.delete(id)
         }
@@ -98,10 +105,9 @@ const buildClient = openWebSocket => ({ debug, address, ...params }) => {
       const handler = { resolve, reject, id }
       handlers.set(id, handler)
       await connection
-      if (debug) {
-        console.debug(`hasura-ws: <start#${id}>`, JSON.parse(payload))
-        handler.trace = Error('hasuraClient.exec error')
-      }
+      handler.start = Date.now()
+      log('start', { id, payload })
+      debug && (handler.trace = Error('hasuraClient.exec error'))
       ws.send(`{"type":"start","id":"${id}","payload":${payload}}`)
     })
 
@@ -115,7 +121,7 @@ const buildClient = openWebSocket => ({ debug, address, ...params }) => {
       execution: exec(id, payload),
       unsubscribe: () => {
         subscribers.delete(id)
-        debug && console.debug(`hasura-ws: <stop#${id}>`)
+        log('stop', { id })
         ws.send(`{"type":"stop","id":"${id}"}`)
       },
     }
