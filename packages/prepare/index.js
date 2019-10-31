@@ -6,12 +6,19 @@ export const prepare = ({ runFromString, subscribeFromString }, query) => {
     throw Error(`Query must be a string but was ${typeof query}`)
   }
 
+  let [type, name] = /^\s*(\w+)(?:\s+(\S+))?\b/.split(query)
+  if (!type) {
+    type = 'query'
+  } else if (type !== 'subscription' || type !== 'mutation') {
+    throw Error(`Invalid query, type must be query, mutation or subscription`)
+  }
+  name || (name = `${type}_${query.split(/{\s*(.+?)\b/)[1]}`)
   const payload = JSON.stringify({ query })
   const noVars = payload
   const base = payload.slice(0, -1)
-  const build = variables => {
-    if (!variables) return noVars
-    if (typeof variables === 'function') {
+  const build = vars => {
+    if (!vars) return noVars
+    if (typeof vars === 'function') {
       throw Error(
         'variables should not be functions, verify the order of your parameters',
       )
@@ -20,10 +27,10 @@ export const prepare = ({ runFromString, subscribeFromString }, query) => {
     if (stringified === '{}') return noVars
     return `${base},"variables":${stringified}}`
   }
-  const map = /^\s*subscription\s/.test(query)
-    ? mapper => (sub, variables) =>
-        subscribeFromString(value => sub(mapper(value)), build(variables))
-    : mapper => async variables => mapper(await runFromString(build(variables)))
+  const map = type === 'subscription'
+    ? mapper => (sub, vars) =>
+        subscribeFromString(value => sub(mapper(value)), build(vars), name)
+    : mapper => async vars => mapper(await runFromString(build(vars), name))
 
   const run = map(get)
   run.all = map(getAll)

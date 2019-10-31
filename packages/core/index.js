@@ -78,6 +78,7 @@ const buildClient = openWebSocket => ({ debug, address, log, ...params }) => {
             payload,
             duration,
             size: data.length,
+            name: handler.query,
           })
           handler.resolve()
           handlers.delete(id)
@@ -100,25 +101,26 @@ const buildClient = openWebSocket => ({ debug, address, log, ...params }) => {
     )
 
   const ws = openWebSocket(address)
-  const exec = (id, payload) =>
+  const exec = (id, payload, name) =>
     new Promise(async (resolve, reject) => {
       const handler = { resolve, reject, id }
       handlers.set(id, handler)
       await connection
       handler.start = Date.now()
+      handler.query = name
       log('start', { id, payload })
       debug && (handler.trace = Error('hasuraClient.exec error'))
       ws.send(`{"type":"start","id":"${id}","payload":${payload}}`)
     })
 
-  const runFromString = payload => exec(getId(), payload)
+  const runFromString = (payload, name) => exec(getId(), payload, name)
 
-  const subscribeFromString = (sub, payload) => {
+  const subscribeFromString = (sub, payload, name) => {
     const id = getId()
     subscribers.set(id, sub)
 
     return {
-      execution: exec(id, payload),
+      execution: exec(id, payload, name),
       unsubscribe: () => {
         subscribers.delete(id)
         log('stop', { id })
