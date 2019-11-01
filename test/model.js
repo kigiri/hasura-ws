@@ -124,6 +124,18 @@ ok({
   test: ({ test, ids }) => test.get(ids[1] + 1),
 })
 
+ok({
+  description: 'model.get: I can use a custom where query instead of id',
+  test: async ({ test, ids }) => {
+    const [element] = await test.get({ id: { _eq: ids[0] } })
+    if (element.id !== ids[0]) {
+      throw Error('Element id missmatch')
+    }
+    return element.requiredField
+  },
+  expect: 'wesh-2',
+})
+
 fail({
   description: 'model.get: wrong key type should fail',
   test: ({ test }) => test.get('pouet'),
