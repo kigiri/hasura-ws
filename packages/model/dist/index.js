@@ -10,13 +10,13 @@ const buildModel = prepare => (name, key = 'id', type = 'Int') => {
   }`);
 
   const updateQuery = prepare(`
-  mutation update_${name}($${key}: ${type}!, $changes: ${name}_set_input!) {
-    update_${name}(where: {${key}: {_eq: $${key}}}, _set: $changes) { affected_rows }
+  mutation update_${name} ($${key}: ${type}!, $changes: ${name}_set_input!) {
+    update_${name} (where: {${key}: {_eq: $${key}}}, _set: $changes) { affected_rows }
   }`);
 
   const updateQueryAll = prepare(`
-  mutation update_${name}($${list}: [${type}!], $changes: ${name}_set_input!) {
-    update_${name}(where: {${key}: {_in: $${list}}}, _set: $changes) { affected_rows }
+  mutation update_${name} ($${list}: [${type}!], $changes: ${name}_set_input!) {
+    update_${name} (where: {${key}: {_in: $${list}}}, _set: $changes) { affected_rows }
   }`);
 
   const deleteQuery = prepare(`
@@ -29,9 +29,10 @@ const buildModel = prepare => (name, key = 'id', type = 'Int') => {
     delete_${name} (where: {id: {_in: $${list}} }) { affected_rows }
   }`);
 
-  const getCountQuery = prepare(
-    `query ${name}_count { ${name}_aggregate { aggregate { count } } }`,
-  );
+  const getCountQuery = prepare(`
+  query ${name}_count {
+    ${name}_aggregate { aggregate { count } }
+  }`);
 
   const getKey = _ => _[key];
   const updateOne = ({ [key]: _, ...changes }) => updateQuery({ [key]: _, changes });
@@ -72,23 +73,37 @@ const buildModel = prepare => (name, key = 'id', type = 'Int') => {
       ${name} (where: {${key}: {_in: $${list}}}) {${key} ${fields}}
     }`;
 
+    const byWhere = `($where: ${name}_bool_exp!) {
+      ${name} (where: $where) {${key} ${fields}}
+    }`;
+
     const selectQuery = prepare(`query ${oneById}`);
     const selectQueryAll = prepare(`query ${allById}`);
+    const selectQueryWhere = prepare(`query ${byWhere}`);
     const subscribeQuery = prepare(`subscription ${oneById}`);
     const subscribeQueryAll = prepare(`subscription ${allById}`);
+    const subscribeQueryWhere = prepare(`subscription ${byWhere}`);
 
     return {
       ...mutations,
       selectQuery,
       selectQueryAll,
+      selectQueryWhere,
       subscribeQuery,
       subscribeQueryAll,
-      get: _ => Array.isArray(_)
-        ? selectQueryAll({ [list]: _ })
-        : selectQuery.one({ [key]: _ }),
-      subscribe: (sub, _) => Array.isArray(_)
-        ? subscribeQueryAll(sub, { [list]: _ })
-        : subscribeQuery.one(sub, { [key]: _ }),
+      subscribeQueryWhere,
+      get: _ => {
+        if (Array.isArray(_)) return selectQueryAll({ [list]: _ })
+        return (_ && typeof _ === "object")
+          ? selectQueryWhere({ where: _ })
+          : selectQuery.one({ [key]: _ })
+      },
+      subscribe: (sub, _) => {
+        if (Array.isArray(_)) return subscribeQueryAll(sub, { [list]: _ })
+        return (_ && typeof _ === "object")
+          ? subscribeQueryWhere(sub, { where: _ })
+          : subscribeQuery.one(sub, { [key]: _ })
+      },
       getCount: getCountQuery,
     }
   }
