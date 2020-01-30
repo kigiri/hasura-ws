@@ -73,6 +73,12 @@ export const buildModel = prepare => (name, key = 'id', type = 'Int') => {
       ${name} (where: $where) {${key} ${fields}}
     }`
 
+    const toPaginate = `(
+      $where: ${name}_bool_exp!, $orderBy: ${name}_order_by!, $limit: Int!, $offset: Int!,
+    ) {
+      ${name} ( order_by: [$orderBy] offset: $offset limit: $limit where: $where ) { ${fields} }
+    }`
+
     const toPaginateWithCount = `(
       $where: ${name}_bool_exp!, $orderBy: ${name}_order_by!, $limit: Int!, $offset: Int!,
     ) {
@@ -83,6 +89,9 @@ export const buildModel = prepare => (name, key = 'id', type = 'Int') => {
     const selectQuery = prepare(`query ${oneById}`)
     const selectQueryAll = prepare(`query ${allById}`)
     const selectQueryWhere = prepare(`query ${byWhere}`)
+    const selectQueryPaginated = prepare(
+      `query get_${name}_paginate ${toPaginate}`,
+    )
     const selectQueryPaginatedWithCount = prepare(
       `query get_${name}_with_count ${toPaginateWithCount}`,
     )
@@ -111,6 +120,7 @@ export const buildModel = prepare => (name, key = 'id', type = 'Int') => {
           : subscribeQuery.one(sub, { [key]: _ })
       },
       getCount: async elems => (await getCountQuery(elem)).aggregate.count,
+      getPaginated: selectQueryPaginated,
       getPaginatedWithCount: async elems => {
         const elemsWithCount = await selectQueryPaginatedWithCount.all(elems)
 
