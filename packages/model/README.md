@@ -109,6 +109,13 @@ user // [ { email: 'jean@email.com' } ]
 count // 1
 ```
 
+`getCount` return the count of entries in the table
+
+```js
+const count = await userModel.getCount()
+count // 2
+```
+
 ## `model.update`
 
 takes an object of the changes (including the id)
