@@ -119,6 +119,10 @@ ok({
   expect: [ 'wesh-2', 'wesh-3' ]
 
 ok({
+  description: 'model.get: I can get count of a table',
+  test: async ({ test }) => await test.getCount(),
+  expect: 4,
+})
 
 ok({
   description: 'model.get: I can get elements for pagination',
@@ -149,6 +153,8 @@ ok({
     }),
   expect: [{ requiredField: 'wesh-2' }],
 })
+
+ok({
   description: 'model.get: I can get elements for pagination with count',
   test: async ({ test }) =>
     await test.getPaginatedWithCount({

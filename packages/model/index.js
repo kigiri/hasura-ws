@@ -119,7 +119,7 @@ export const buildModel = prepare => (name, key = 'id', type = 'Int') => {
           ? subscribeQueryWhere(sub, { where: _ })
           : subscribeQuery.one(sub, { [key]: _ })
       },
-      getCount: async elems => (await getCountQuery(elem)).aggregate.count,
+      getCount: async elems => (await getCountQuery(elems)).aggregate.count,
       getPaginated: selectQueryPaginated,
       getPaginatedWithCount: async elems => {
         const elemsWithCount = await selectQueryPaginatedWithCount.all(elems)
