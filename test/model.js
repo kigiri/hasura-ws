@@ -320,3 +320,15 @@ ok({
   test: ({ test, ids, firstId }) => test.remove([firstId, ...ids]),
   expect: { affected_rows: 2 },
 })
+
+ok({
+  description: 'model.remove: Clean db for next test running',
+  test: async ({ test }) => {
+    const elements = (await test.get({
+      requiredField: { _ilike: `%wesh%` },
+    })).map(({ id }) => id)
+
+    return test.remove(elements)
+  },
+  expect: { affected_rows: 1 },
+})
