@@ -116,7 +116,8 @@ ok({
 ok({
   description: 'model.get: I can get multiple elements',
   test: async ({ test, ids }) => (await test.get(ids)).map(r => r.requiredField),
-  expect: [ 'wesh-2', 'wesh-3' ]
+  expect: ['wesh-2', 'wesh-3'],
+})
 
 ok({
   description: 'model.get: I can get count of a table',
@@ -258,7 +259,7 @@ fail({
   expect: {
     code: 'parse-failed',
     message: 'expected Text, encountered Number',
-    path: '$.variableValues.changes.requiredField'
+    path: '$.variableValues.changes.requiredField',
   },
 })
 
@@ -340,7 +341,6 @@ fail({
     message: 'invalid input syntax for integer: "pouet"',
   },
 })
-
 
 /*
  * Model.remove
