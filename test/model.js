@@ -119,6 +119,36 @@ ok({
   expect: [ 'wesh-2', 'wesh-3' ]
 
 ok({
+
+ok({
+  description: 'model.get: I can get elements for pagination',
+  test: async ({ test }) =>
+    await test.getPaginated({
+      where: {},
+      offset: 0,
+      limit: 10,
+      orderBy: {},
+    }),
+  expect: [
+    { requiredField: 'wesh' },
+    { requiredField: 'wesh-1' },
+    { requiredField: 'wesh-2' },
+    { requiredField: 'wesh-3' },
+  ],
+})
+
+ok({
+  description:
+    'model.get: I can get paginated (filtered, limited, sorted) elements',
+  test: async ({ test }) =>
+    await test.getPaginated({
+      where: { requiredField: { _neq: 'wesh-1' } },
+      offset: 1,
+      limit: 1,
+      orderBy: { requiredField: 'desc' },
+    }),
+  expect: [{ requiredField: 'wesh-2' }],
+})
   description: 'model.get: I can get elements for pagination with count',
   test: async ({ test }) =>
     await test.getPaginatedWithCount({
