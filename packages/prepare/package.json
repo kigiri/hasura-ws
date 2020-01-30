@@ -30,7 +30,7 @@
     "@hasura-ws/core": "^0.4.4"
   },
   "devDependencies": {
-    "rollup": "^1.26.0",
+    "rollup": "^1.30.1",
     "rollup-plugin-commonjs": "^9.3.4"
   },
   "gitHead": "8efa97d1f7edc333eb653c3b4172f1305342467d"
