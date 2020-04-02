@@ -87,7 +87,7 @@ const buildModel = prepare => (name, key = 'id', type = 'Int') => {
       $where: ${name}_bool_exp!, $orderBy: ${name}_order_by!, $limit: Int!, $offset: Int!,
     ) {
       ${name} ( order_by: [$orderBy] offset: $offset limit: $limit where: $where ) { ${fields} }
-      ${name}_aggregate (where: $where offset: $offset limit: $limit) { aggregate { count } } 
+      ${name}_aggregate (where: $where) { aggregate { count } } 
     }`;
 
     const selectQuery = prepare(`query ${oneById}`);
