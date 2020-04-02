@@ -77,6 +77,44 @@ users[0].email // 'jean@email.com'
 users[1].email // 'geger@hotmail.com'
 ```
 
+or filter, sort, paginate arguments
+
+`getPaginated`
+the query returns the filtered query
+
+```js
+const users = await userModel.getPaginated({
+  where: { email: { _eq: 'jean@email.com' } },
+  offset: 0,
+  limit: 1,
+  orderBy: { email: 'asc' },
+})
+users // [ { email: 'jean@email.com' } ]
+```
+
+`getPaginatedWithCount`
+the query returns an object with :
+
+- the result of the filtered query - the key of this value is the name of the table queried
+- the number of elements returned by this filtered query - the key of this value is always `count`
+
+```js
+const { user, count } = await userModel.getPaginatedWithCount({
+  where: { email: { _eq: 'jean@email.com' } },
+  offset: 0,
+  limit: 1,
+  orderBy: { email: 'asc' },
+})
+user // [ { email: 'jean@email.com' } ]
+count // 1
+```
+
+`getCount` return the count of entries in the table
+
+```js
+const count = await userModel.getCount()
+count // 2
+```
 
 ## `model.update`
 

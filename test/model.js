@@ -116,7 +116,79 @@ ok({
 ok({
   description: 'model.get: I can get multiple elements',
   test: async ({ test, ids }) => (await test.get(ids)).map(r => r.requiredField),
-  expect: [ 'wesh-2', 'wesh-3' ]
+  expect: ['wesh-2', 'wesh-3'],
+})
+
+ok({
+  description: 'model.get: I can get count of a table',
+  test: async ({ test }) => await test.getCount(),
+  expect: 4,
+})
+
+ok({
+  description: 'model.get: I can get elements for pagination',
+  test: async ({ test }) =>
+    await test.getPaginated({
+      where: {},
+      offset: 0,
+      limit: 10,
+      orderBy: {},
+    }),
+  expect: [
+    { requiredField: 'wesh' },
+    { requiredField: 'wesh-1' },
+    { requiredField: 'wesh-2' },
+    { requiredField: 'wesh-3' },
+  ],
+})
+
+ok({
+  description:
+    'model.get: I can get paginated (filtered, limited, sorted) elements',
+  test: async ({ test }) =>
+    await test.getPaginated({
+      where: { requiredField: { _neq: 'wesh-1' } },
+      offset: 1,
+      limit: 1,
+      orderBy: { requiredField: 'desc' },
+    }),
+  expect: [{ requiredField: 'wesh-2' }],
+})
+
+ok({
+  description: 'model.get: I can get elements for pagination with count',
+  test: async ({ test }) =>
+    await test.getPaginatedWithCount({
+      where: {},
+      offset: 0,
+      limit: 10,
+      orderBy: {},
+    }),
+  expect: {
+    test: [
+      { requiredField: 'wesh' },
+      { requiredField: 'wesh-1' },
+      { requiredField: 'wesh-2' },
+      { requiredField: 'wesh-3' },
+    ],
+    count: 4,
+  },
+})
+
+ok({
+  description:
+    'model.get: I can get paginated (filtered, limited, sorted) elements with count',
+  test: async ({ test }) =>
+    await test.getPaginatedWithCount({
+      where: { requiredField: { _neq: 'wesh-1' } },
+      offset: 1,
+      limit: 1,
+      orderBy: { requiredField: 'desc' },
+    }),
+  expect: {
+    test: [{ requiredField: 'wesh-2' }],
+    count: 1,
+  },
 })
 
 ok({
@@ -187,7 +259,7 @@ fail({
   expect: {
     code: 'parse-failed',
     message: 'expected Text, encountered Number',
-    path: '$.variableValues.changes.requiredField'
+    path: '$.variableValues.changes.requiredField',
   },
 })
 
@@ -270,7 +342,6 @@ fail({
   },
 })
 
-
 /*
  * Model.remove
  */
@@ -284,4 +355,16 @@ ok({
   description: 'model.remove: Removing multiple element',
   test: ({ test, ids, firstId }) => test.remove([firstId, ...ids]),
   expect: { affected_rows: 2 },
+})
+
+ok({
+  description: 'model.remove: Clean db for next test running',
+  test: async ({ test }) => {
+    const elements = (await test.get({
+      requiredField: { _ilike: `%wesh%` },
+    })).map(({ id }) => id)
+
+    return test.remove(elements)
+  },
+  expect: { affected_rows: 1 },
 })
