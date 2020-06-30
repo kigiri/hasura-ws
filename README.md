@@ -3,8 +3,6 @@
 Minimal javascript graphql websocket client for `hasura`
 
 
-*!! VERY EARLY, UNSTABLE, BARELY TESTED, USE WITH CAUTION !!*
-
 ## Packages
 
 hasura-ws suite is composed of 4 blocks:
