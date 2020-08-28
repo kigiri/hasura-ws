@@ -37,7 +37,12 @@ export const useQuery = (run, variables, inputs) => {
   useEffect(() => {
     reloadState(state, setState)
     if (variables === null) return
-    run(variables).then(setState, error => setState({ [ERR]: error }))
+    let abort = false
+    run(variables).then(
+      newState => abort || setState(newState),
+      error => abort || resetState({ [ERR]: error }),
+    )
+    return () => abort = true
   }, inputs || genInputs(variables))
   return state
 }
