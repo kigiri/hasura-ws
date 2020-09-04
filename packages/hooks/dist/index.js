@@ -44,7 +44,7 @@ const useQuery = (run, variables, inputs) => {
     let abort = false;
     run(variables).then(
       newState => abort || setState(newState),
-      error => abort || resetState({ [ERR]: error }),
+      error => abort || setState({ [ERR]: error }),
     );
     return () => abort = true
   }, inputs || genInputs(variables));
