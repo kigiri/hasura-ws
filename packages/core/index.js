@@ -22,7 +22,8 @@ const buildClient = openWebSocket => ({ debug, address, log, ...params }) => {
 
   const rejectAllPending = err => {
     subscribers.clear() // TODO: store subscribers query and re-trigger them
-    for (const [id, { reject }] of handlers) {
+    for (const [id, { reject, noCleanup }] of handlers) {
+      noCleanup || activeQueries.delete(id)
       handlers.delete(id)
       reject(err)
     }
@@ -36,6 +37,7 @@ const buildClient = openWebSocket => ({ debug, address, log, ...params }) => {
     props.id = handler.id
     log('query', props)
     handlers.delete(handler.id)
+    handler.noCleanup || activeQueries.delete(handler.id)
   }
 
   const messageFail = (handler, payload, id) => {
@@ -102,18 +104,24 @@ const buildClient = openWebSocket => ({ debug, address, log, ...params }) => {
       new HasuraError({ error: `WebSocket connection ${type}`, event }),
     )
 
-  const ws = openWebSocket(address)
-  const exec = (id, payload, name) =>
+  let ws = openWebSocket(address)
+  let activeQueries = new Map()
+  const exec = (id, payload, name, noCleanup) =>
     new Promise(async (resolve, reject) => {
-      const handler = { resolve, reject, id }
       await connection
-      handler.id = id
-      handler.size = 0
-      handler.start = Date.now()
-      handler.query = name
-      handlers.set(id, handler)
-      log('start', { id, payload })
+      const handler = {
+        id,
+        resolve,
+        reject,
+        size: 0,
+        query: name,
+        start: Date.now(),
+        noCleanup,
+      }
       debug && (handler.trace = Error('hasuraClient.exec error'))
+      handlers.set(id, handler)
+      activeQueries.set(id, { payload, name })
+      log('start', { id, payload })
       ws.send(`{"type":"start","id":"${id}","payload":${payload}}`)
     })
 
@@ -124,22 +132,36 @@ const buildClient = openWebSocket => ({ debug, address, log, ...params }) => {
     subscribers.set(id, sub)
 
     return {
-      execution: exec(id, payload, name),
+      execution: exec(id, payload, name, true),
       unsubscribe: () => {
         subscribers.delete(id)
+        activeQueries.delete(id)
         log('stop', { id })
         ws.send(`{"type":"stop","id":"${id}"}`)
       },
     }
   }
 
-  const connection = new Promise((resolve, reject) => {
+  const getConnection = () => new Promise((resolve, reject) => {
     ws.on('error', event => reject(handleFail(event, 'failed')))
     ws.on('close', event => reject(handleFail(event, 'close')))
     ws.on('message', data => handleMessage(data, resolve, reject))
-  })
+  }).then(() => connected = true)
+
+  let connected
+  let connection = getConnection()
 
   const connect = async ({ adminSecret, token, role, headers }) => {
+    const previousActiveQueries = activeQueries
+    const reload = connected
+    if (reload) {
+      ws.close()
+      ws = openWebSocket(address)
+      connection = getConnection()
+      activeQueries = new Map()
+      connected = false
+    }
+
     if (!ws.readyState) {
       await new Promise(s => ws.on('open', s))
     }
@@ -153,6 +175,13 @@ const buildClient = openWebSocket => ({ debug, address, log, ...params }) => {
     role && (payload.headers['x-hasura-role'] = role)
 
     ws.send(JSON.stringify({ type: 'connection_init', payload }))
+
+    reload && connection.then(() => {
+      // re exec all previous active queries
+      for (const [id, { payload, name }] of previousActiveQueries) {
+        exec(id, payload, name)
+      }
+    })
 
     return connection
   }
