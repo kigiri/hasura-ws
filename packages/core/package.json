@@ -1,6 +1,6 @@
 {
   "name": "@hasura-ws/core",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "description": "Shared internal core for hasura-ws",
   "main": "dist/index.js",
   "module": "index.js",
