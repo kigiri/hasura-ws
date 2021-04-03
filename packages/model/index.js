@@ -111,13 +111,13 @@ export const buildModel = prepare => (name, key = 'id', type = 'Int') => {
         if (Array.isArray(_)) return selectQueryAll({ [list]: _ })
         return (_ && typeof _ === "object")
           ? selectQueryWhere({ where: _ })
-          : selectQuery.one({ [key]: _ })
+          : selectQuery.one(_ && { [key]: _ })
       },
       subscribe: (sub, _) => {
         if (Array.isArray(_)) return subscribeQueryAll(sub, { [list]: _ })
         return (_ && typeof _ === "object")
           ? subscribeQueryWhere(sub, { where: _ })
-          : subscribeQuery.one(sub, { [key]: _ })
+          : subscribeQuery.one(sub, _ && { [key]: _ })
       },
       getCount: async elems => (await getCountQuery(elems)).aggregate.count,
       getPaginated: selectQueryPaginated,

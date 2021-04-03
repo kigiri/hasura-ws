@@ -1,13 +1,12 @@
 class HasuraError extends Error {
-  constructor({ error, extensions, ...props }) {
-    super(error)
+  constructor({ extensions, message, ...props }) {
+    super(message)
     Object.assign(this, props)
     Object.assign(this, extensions)
-    Error.captureStackTrace && Error.captureStackTrace(this, HasuraError)
+    Error?.captureStackTrace(this, HasuraError)
   }
 }
 
-const flatErrors = (acc, err) => acc.concat(err.errors ? err.errors : [ err ])
 const buildClient = openWebSocket => ({ debug, address, log, ...params }) => {
   log || (log = debug ? console.debug : () => {})
   const handlers = new Map()
@@ -43,14 +42,9 @@ const buildClient = openWebSocket => ({ debug, address, log, ...params }) => {
   const messageFail = (handler, payload, id) => {
     if (!handler) return log('missing-handler', { id, type: 'error' })
 
-    if (payload.errors) {
-      payload.errors = payload.errors.reduce(flatErrors, [])
-      Object.assign(payload, payload.errors[0])
-    }
-
     end(handler, { payload, type: 'error' })
     handlers.delete(id)
-    const err = new HasuraError(payload)
+    const err = new HasuraError(payload.errors[0])
     debug && (err.trace = handler.trace.stack)
     return handler.reject(err)
   }
@@ -69,7 +63,7 @@ const buildClient = openWebSocket => ({ debug, address, log, ...params }) => {
         return resolve(payload)
 
       case 'connection_error':
-        const err = rejectAllPending(new HasuraError({ error: payload }))
+        const err = rejectAllPending(new HasuraError({ errors: [payload] }))
         return reject(err)
 
       case 'data':
@@ -101,7 +95,7 @@ const buildClient = openWebSocket => ({ debug, address, log, ...params }) => {
 
   const handleFail = (event, type) =>
     rejectAllPending(
-      new HasuraError({ error: `WebSocket connection ${type}`, event }),
+      new HasuraError({ message: `WebSocket connection ${type}`, event }),
     )
 
   let ws = openWebSocket(address)

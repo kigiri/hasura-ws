@@ -1,13 +1,13 @@
 {
   "name": "root",
   "private": true,
+  "type": "module",
   "scripts": {
-    "test": "node -r esm test/index.js",
-    "test-inspect": "node --inspect -r esm test/index.js",
+    "test": "node test/index.js",
+    "test-inspect": "node --inspect test/index.js",
     "publish": "git stash && lerna run build && git commit -am \"add build files\" && lerna publish && git stash pop"
   },
   "devDependencies": {
-    "esm": "^3.2.25",
     "ws": "^7.2.1"
   }
 }

@@ -57,17 +57,8 @@ fail({
   test: ({ client }) => client.run(insertTestMutation, { test: {} }),
   expect: {
     code: 'constraint-violation',
-    data: null,
-    errors: [
-      {
-        code: 'constraint-violation',
-        error:
-          'Not-NULL violation. null value in column "requiredField" violates not-null constraint',
-        path: '$.selectionSet.insert_test.args.objects',
-      },
-    ],
     message:
-      'Not-NULL violation. null value in column "requiredField" violates not-null constraint',
+      'Not-NULL violation. null value in column "requiredField" of relation "test" violates not-null constraint',
     path: '$.selectionSet.insert_test.args.objects',
   },
 })
