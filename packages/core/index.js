@@ -3,7 +3,7 @@ class HasuraError extends Error {
     super(message)
     Object.assign(this, props)
     Object.assign(this, extensions)
-    Error?.captureStackTrace(this, HasuraError)
+    Error.captureStackTrace?.(this, HasuraError)
   }
 }
 
