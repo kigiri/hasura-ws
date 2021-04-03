@@ -1,6 +1,6 @@
 {
   "name": "@hasura-ws/node",
-  "version": "0.6.0",
+  "version": "1.0.0-alpha.0",
   "description": "Node driver for hasura-ws",
   "type": "module",
   "module": "index.js",
@@ -23,7 +23,7 @@
   },
   "homepage": "https://github.com/kigiri/hasura-ws#readme",
   "dependencies": {
-    "@hasura-ws/core": "^0.6.0",
+    "@hasura-ws/core": "^1.0.0-alpha.0",
     "ws": "^6.2.1"
   },
   "devDependencies": {

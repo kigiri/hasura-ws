@@ -1,6 +1,6 @@
 {
   "name": "@hasura-ws/model",
-  "version": "0.6.0",
+  "version": "1.0.0-alpha.0",
   "description": "Model builder for hasura-ws",
   "type": "module",
   "module": "index.js",

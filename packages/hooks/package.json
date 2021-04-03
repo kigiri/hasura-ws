@@ -1,6 +1,6 @@
 {
   "name": "@hasura-ws/hooks",
-  "version": "0.6.0",
+  "version": "1.0.0-alpha.0",
   "description": "React hooks for hasura-ws",
   "type": "module",
   "module": "index.js",
@@ -27,7 +27,7 @@
   },
   "gitHead": "a5cbeca43893f0dd93221b1366aa3113fcc9a5ae",
   "dependencies": {
-    "@hasura-ws/model": "^0.6.0",
-    "@hasura-ws/prepare": "^0.6.0"
+    "@hasura-ws/model": "^1.0.0-alpha.0",
+    "@hasura-ws/prepare": "^1.0.0-alpha.0"
   }
 }
