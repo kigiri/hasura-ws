@@ -26,12 +26,5 @@
     "@hasura-ws/core": "^1.0.1-alpha.0",
     "ws": "^6.2.1"
   },
-  "devDependencies": {
-    "@babel/core": "^7.8.4",
-    "rollup": "^1.30.1",
-    "rollup-plugin-babel": "^4.3.3",
-    "rollup-plugin-commonjs": "^9.3.4",
-    "rollup-plugin-node-resolve": "^4.2.4"
-  },
-  "gitHead": "8a064c366d706477f42eb08eb8ef28a3ef1db4ef"
+  "gitHead": "54c8b8e3f84b32806a6014ec9bd12c4e5b9b1924"
 }
