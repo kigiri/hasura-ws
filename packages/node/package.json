@@ -24,7 +24,7 @@
   "homepage": "https://github.com/kigiri/hasura-ws#readme",
   "dependencies": {
     "@hasura-ws/core": "^1.0.1-alpha.0",
-    "ws": "^6.2.1"
+    "ws": "^7.4.5"
   },
   "gitHead": "54c8b8e3f84b32806a6014ec9bd12c4e5b9b1924"
 }
