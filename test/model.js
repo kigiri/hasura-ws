@@ -238,7 +238,7 @@ fail({
   expect: {
     code: 'parse-failed',
     message: 'parsing Text failed, expected String, but encountered Number',
-    path: '$.variableValues.changes.requiredField',
+    path: '$.selectionSet.update_test.args._set.requiredField',
   },
 })
 

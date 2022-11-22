@@ -47,8 +47,8 @@ fail({
   test: ({ client }) => client.run(insertTestMutation, {}),
   expect: {
     code: 'validation-failed',
-    message: 'expecting a value for non-nullable variable: test of type: test_insert_input! in variableValues',
-    path: '$.variableValues',
+    message: 'expecting a value for non-nullable variable: "test"',
+    path: '$',
   },
 })
 

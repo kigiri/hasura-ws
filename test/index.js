@@ -16,21 +16,23 @@ const initClient = buildClient(
 )
 
 // console.log('starting hasura test db...')
-// execSync(`docker-compose -f ./test/docker-compose.yaml up -d`)
+execSync(`docker-compose -f ./test/docker-compose.yaml up --build -d`)
 console.log('resetting database...')
-execSync(`hasura migrate apply --endpoint http://localhost:3354 --down 2`, {
+execSync(`hasura migrate apply --database-name default --log-level ERROR --endpoint http://localhost:3354 --down 2`, {
  cwd: `./test/hasura`,
+ stdio: 'ignore',
 })
-execSync(`hasura migrate apply --endpoint http://localhost:3354`, {
+execSync(`hasura migrate apply --database-name default --log-level ERROR --endpoint http://localhost:3354`, {
  cwd: `./test/hasura`,
+ stdio: 'ignore',
 })
-
 console.log('connecting...')
 const exitCode = await run(() => ({
   client: initClient({
     address: 'ws://localhost:3354/v1/graphql',
     adminSecret: 'TEST_ME',
-    // debug: true,
+    debug: true,
+    log: _ => {},
   }),
 })).then(
   () => console.log('all tests pass !'),

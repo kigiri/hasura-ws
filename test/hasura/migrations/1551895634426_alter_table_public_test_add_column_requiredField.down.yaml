@@ -1,3 +1,0 @@
-- args:
-    sql: ALTER TABLE "public"."test" DROP COLUMN "requiredField"
-  type: run_sql
