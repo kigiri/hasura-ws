@@ -1,6 +1,6 @@
 class HasuraError extends Error {
-  constructor({ extensions, message, ...props }) {
-    super(message)
+  constructor({ extensions, message, ...props }, cause) {
+    super(message, cause)
     Object.assign(this, props)
     Object.assign(this, extensions)
     Error.captureStackTrace?.(this, HasuraError)
@@ -44,9 +44,9 @@ const buildClient = openWebSocket => ({ debug, address, log, ...params }) => {
 
     end(handler, { payload, type: 'error' })
     handlers.delete(id)
-    const err = new HasuraError(payload.errors[0])
-    debug && (err.trace = handler.trace.stack)
-    return handler.reject(err)
+    return handler.reject(
+      new HasuraError(payload.errors[0], debug && { cause: handler.cause })
+    )
   }
 
   const handleMessage = (data, resolve, reject) => {
@@ -100,25 +100,26 @@ const buildClient = openWebSocket => ({ debug, address, log, ...params }) => {
 
   let ws = openWebSocket(address)
   let activeQueries = new Map()
-  const exec = (id, payload, name, noCleanup) =>
-    new Promise(async (resolve, reject) => {
-      await connection
-      const handler = {
-        id,
-        resolve,
-        reject,
-        size: 0,
-        query: name,
-        start: Date.now(),
-        noCleanup,
-      }
-      debug && (handler.trace = Error('hasuraClient.exec error'))
-      handlers.set(id, handler)
-      activeQueries.set(id, { payload, name })
-      log('start', { id, payload })
-      ws.send(`{"type":"start","id":"${id}","payload":${payload}}`)
+  const exec = async (id, payload, name, noCleanup) => {
+    await connection
+    const handler = {
+      id,
+      size: 0,
+      query: name,
+      start: Date.now(),
+      noCleanup,
+    }
+    const result = new Promise((resolve, reject) => {
+      handler.resolve = resolve
+      handler.reject = reject
     })
-
+    debug && (handler.cause = Error('hasuraClient.exec'))
+    handlers.set(id, handler)
+    activeQueries.set(id, { payload, name })
+    log('start', { id, payload })
+    ws.send(`{"type":"start","id":"${id}","payload":${payload}}`)
+    return result
+  }
   const runFromString = (payload, name) => exec(getId(), payload, name)
 
   const subscribeFromString = (sub, payload, name) => {
